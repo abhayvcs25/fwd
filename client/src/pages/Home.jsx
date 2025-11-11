@@ -19,9 +19,9 @@ export default function Home() {
             <Link to="/worker-auth" className="text-gray-700 hover:text-blue-600 transition">
               Register as Worker
             </Link>
-            <a href="/" className="text-gray-700 hover:text-blue-600 transition">
+            <Link to="/about" className="text-gray-700 hover:text-blue-600 transition">
               About
-            </a>
+            </Link>
             <a href="/" className="text-gray-700 hover:text-blue-600 transition">
               Contact
             </a>
@@ -226,9 +226,9 @@ export default function Home() {
                 </a>
               </li>
               <li>
-                <a href="/" className="text-gray-300 hover:text-white transition">
+                <Link to="/about" className="text-gray-300 hover:text-white transition">
                   About Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
