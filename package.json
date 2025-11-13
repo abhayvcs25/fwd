@@ -4,5 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node start.js"
+  },
+  "dependencies": {
+    "lucide-react": "^0.553.0"
   }
 }

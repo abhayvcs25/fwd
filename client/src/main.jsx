@@ -6,6 +6,8 @@ import CustomerAuth from './pages/CustomerAuth'
 import WorkerAuth from './pages/WorkerAuth'
 import "./index.css"; 
 import About from './pages/about'
+import CustomerDashboard from './pages/cust-dashboard'
+
 
 
 function App(){
@@ -16,9 +18,12 @@ function App(){
         <Route path="/customer-auth" element={<CustomerAuth/>}/>
         <Route path="/worker-auth" element={<WorkerAuth/>}/>
         <Route path="/about" element={<About/>}/>
+        <Route path="/customer-dashboard" element={<CustomerDashboard/>}/>
       </Routes>
     </BrowserRouter>
   )
 }
+
+export default App
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>)
