@@ -7,6 +7,7 @@ import WorkerAuth from './pages/WorkerAuth'
 import "./index.css"; 
 import About from './pages/about'
 import CustomerDashboard from './pages/cust-dashboard'
+import WorkerDashboard from './pages/WorkerDashboard'
 
 
 
@@ -18,6 +19,7 @@ function App(){
         <Route path="/customer-auth" element={<CustomerAuth/>}/>
         <Route path="/worker-auth" element={<WorkerAuth/>}/>
         <Route path="/about" element={<About/>}/>
+        <Route path="/worker-dashboard" element={<WorkerDashboard/>}/>
         <Route path="/customer-dashboard" element={<CustomerDashboard/>}/>
       </Routes>
     </BrowserRouter>

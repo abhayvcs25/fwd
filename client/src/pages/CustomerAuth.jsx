@@ -2,6 +2,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom";
 
+
+
 export default function CustomerAuth() {
   const [activeTab, setActiveTab] = useState("login")
   const [loginData, setLoginData] = useState({ email: "", password: "" })
@@ -14,7 +16,7 @@ export default function CustomerAuth() {
     location: "",
   })
   const [errors, setErrors] = useState({})
-  const navigate = useNavigate();
+
   
 
   // Validation helper
@@ -22,6 +24,7 @@ export default function CustomerAuth() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
 
+  const navigate = useNavigate();
   // Handle login submit
   const handleLoginSubmit = (e) => {
     e.preventDefault()

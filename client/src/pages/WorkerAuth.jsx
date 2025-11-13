@@ -1,5 +1,6 @@
-
 import { useState } from "react"
+import { useNavigate } from "react-router-dom";
+
 
 export default function WorkerAuth() {
   const [activeTab, setActiveTab] = useState("login")
@@ -41,11 +42,14 @@ export default function WorkerAuth() {
     return newErrors
   }
 
+  const navigate = useNavigate();
+
   const handleLoginSubmit = (e) => {
     e.preventDefault()
     const newErrors = validateLogin()
     if (Object.keys(newErrors).length === 0) {
       alert("Login successful! Welcome back.")
+      navigate('/worker-dashboard');
       setLoginData({ email: "", password: "" })
       setErrors({})
     } else {
