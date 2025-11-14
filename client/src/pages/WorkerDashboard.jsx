@@ -11,7 +11,17 @@ export default function WorkerDashboard (){
       navigate("/");
     };
 
-  const navItems = ["Dashboard", "My Jobs", "Earnings", "Messages", "Reviews", "Settings"]
+  const navItems = ["Dashboard", "My Jobs", "Earnings", "Messages", "Reviews", "Settings","Edit Profile"]
+  const navRoutes = {
+    "Dashboard": "/worker-dashboard",
+    "My Jobs": "/worker-jobs",
+    "Earnings": "/worker-earnings",
+    "Messages": "/worker-messages",
+    "Reviews": "/worker-reviews",
+    "Settings": "/worker-settings",
+    "Edit Profile": "/worker-profile-edit"
+  };
+
 
   const upcomingJobs = [
     { id: 1, title: "Website Design", customer: "John Smith", status: "Pending" },
@@ -324,7 +334,10 @@ export default function WorkerDashboard (){
         {navItems.map((item) => (
           <div
             key={item}
-            onClick={() => setActiveNav(item)}
+            onClick={() => {
+            setActiveNav(item);
+            navigate(navRoutes[item]);   // 🔥 redirect user
+          }}
             style={{
               padding: "14px 20px",
               cursor: "pointer",
@@ -353,7 +366,7 @@ export default function WorkerDashboard (){
           style={{
             width: "100%",
             padding: "12px 16px",
-            backgroundColor: "#FF5252",
+            backgroundColor: "#FFC107",
             color: "#fff",
             border: "none",
             borderRadius: "6px",

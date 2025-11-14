@@ -9,7 +9,8 @@ import About from './pages/about'
 import CustomerDashboard from './pages/cust-dashboard'
 import WorkerDashboard from './pages/WorkerDashboard'
 import SearchPage from './pages/SearchPage'
-
+import WorkerProfileEdit from './pages/WorkerProfileEdit'
+import NotFound from './pages/NotFound'
 
 
 function App(){
@@ -23,6 +24,8 @@ function App(){
         <Route path="/worker-dashboard" element={<WorkerDashboard/>}/>
         <Route path="/customer-dashboard" element={<CustomerDashboard/>}/>
         <Route path="/search" element={<SearchPage/>}/>
+        <Route path="/worker-profile-edit" element={<WorkerProfileEdit/>}/>
+        <Route path="*" element={<NotFound/>}/>
       </Routes>
     </BrowserRouter>
   )
