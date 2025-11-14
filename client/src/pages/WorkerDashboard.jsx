@@ -1,7 +1,15 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom";
+
 export default function WorkerDashboard (){
   const [activeNav, setActiveNav] = useState("Dashboard")
+
+  const navigate = useNavigate();
+  
+    const handleLogout = () => {
+      // you can clear tokens here if needed
+      navigate("/");
+    };
 
   const navItems = ["Dashboard", "My Jobs", "Earnings", "Messages", "Reviews", "Settings"]
 
@@ -290,7 +298,7 @@ export default function WorkerDashboard (){
     <div style={styles.container}>
       {/* Navbar */}
       <div style={styles.navbar}>
-        <div style={styles.navbarTitle}>💼 WorkHub</div>
+        <div style={styles.navbarTitle}>💼 DailyJobs</div>
         <div style={styles.navbarRight}>
           <span style={styles.navbarIcon}>🔔</span>
           <div style={styles.navbarAvatar}>JD</div>
@@ -298,20 +306,66 @@ export default function WorkerDashboard (){
       </div>
 
       {/* Sidebar */}
-      <div style={styles.sidebar}>
+      <div
+      style={{
+         position: "fixed",
+       left: 0,
+    top: "70px",
+    height: "calc(100vh - 70px)",
+    width: "220px",
+    backgroundColor: "#f9f9f9",
+    borderRight: "1px solid #ddd",
+    display: "flex",
+    flexDirection: "column",
+      }}
+    >
+      {/* Navigation Items */}
+      <div style={{ flex: 1, padding: "12px 0" }}>
         {navItems.map((item) => (
           <div
             key={item}
-            style={{
-              ...styles.navItem,
-              ...(activeNav === item ? styles.navItemActive : styles.navItemInactive),
-            }}
             onClick={() => setActiveNav(item)}
+            style={{
+              padding: "14px 20px",
+              cursor: "pointer",
+              fontSize: "16px",
+              borderRadius: "6px",
+              margin: "6px 10px",
+              backgroundColor: activeNav === item ? "#007BFF" : "transparent",
+              color: activeNav === item ? "#fff" : "#333",
+              fontWeight: activeNav === item ? "600" : "400",
+            }}
           >
             {item}
           </div>
         ))}
       </div>
+
+      {/* Logout Button */}
+      <div
+        style={{
+          padding: "16px",
+          borderTop: "1px solid #ddd",
+        }}
+      >
+        <button
+          onClick={handleLogout}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            backgroundColor: "#FF5252",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "15px",
+            fontWeight: "600",
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
 
       {/* Main Content */}
       <div style={styles.mainContent}>

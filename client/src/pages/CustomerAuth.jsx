@@ -36,7 +36,6 @@ export default function CustomerAuth() {
     if (!loginData.password) newErrors.password = "Password is required"
 
     if (Object.keys(newErrors).length === 0) {
-      alert("Login successful! Welcome to SkillMatch.")
       navigate('/customer-dashboard');
       setLoginData({ email: "", password: "" })
     }

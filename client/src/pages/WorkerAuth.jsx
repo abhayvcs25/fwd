@@ -48,7 +48,6 @@ export default function WorkerAuth() {
     e.preventDefault()
     const newErrors = validateLogin()
     if (Object.keys(newErrors).length === 0) {
-      alert("Login successful! Welcome back.")
       navigate('/worker-dashboard');
       setLoginData({ email: "", password: "" })
       setErrors({})

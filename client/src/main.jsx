@@ -8,6 +8,7 @@ import "./index.css";
 import About from './pages/about'
 import CustomerDashboard from './pages/cust-dashboard'
 import WorkerDashboard from './pages/WorkerDashboard'
+import SearchPage from './pages/SearchPage'
 
 
 
@@ -21,6 +22,7 @@ function App(){
         <Route path="/about" element={<About/>}/>
         <Route path="/worker-dashboard" element={<WorkerDashboard/>}/>
         <Route path="/customer-dashboard" element={<CustomerDashboard/>}/>
+        <Route path="/search" element={<SearchPage/>}/>
       </Routes>
     </BrowserRouter>
   )

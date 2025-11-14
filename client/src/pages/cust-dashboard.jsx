@@ -1,11 +1,23 @@
 
 import { useState } from "react"
 import { Home, BookOpen, Heart, MessageSquare, User, Settings, HelpCircle, LogOut, Search, Bell } from "lucide-react"
+import { useNavigate } from "react-router-dom";
 
+  
 export default function CustomerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
 
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // you can clear tokens here if needed
+    navigate("/");
+  };
+
+  const handleSearchClick = () => {
+    navigate("/search"); // <-- change to your search page route
+  };
   // Mock user data
   const user = {
     name: "Abhay Pawar",
@@ -74,6 +86,7 @@ export default function CustomerDashboard() {
     { icon: Settings, label: "Settings", href: "#" },
     { icon: HelpCircle, label: "Support", href: "#" },
   ]
+ 
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -89,7 +102,7 @@ export default function CustomerDashboard() {
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
               SM
             </div>
-            {sidebarOpen && <span className="ml-3 font-bold text-lg text-gray-900">SkillMatch</span>}
+            {sidebarOpen && <span className="ml-3 font-bold text-lg text-gray-900">DailyJobs</span>}
           </div>
         </div>
 
@@ -107,9 +120,10 @@ export default function CustomerDashboard() {
           ))}
         </nav>
 
+
         {/* Logout Button */}
         <div className="p-4 border-t border-gray-200">
-          <button className="w-full flex items-center justify-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors group font-medium">
+          <button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors group font-medium">
             <LogOut className="w-5 h-5" />
             {sidebarOpen && <span className="ml-2 text-sm">Logout</span>}
           </button>
@@ -123,17 +137,20 @@ export default function CustomerDashboard() {
           <div className="flex items-center justify-between px-8 py-4">
             {/* Left: Search Bar */}
             <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search services, workers..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                />
-              </div>
-            </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+        <input
+          type="text"
+          placeholder="Search services, workers..."
+          onClick={handleSearchClick}   // ⭐ click triggers navigation
+          readOnly                    // ⭐ prevents typing
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 
+                     focus:border-transparent text-sm cursor-pointer"
+        />
+      </div>
+    </div>
 
             {/* Right: Notifications & Profile */}
             <div className="flex items-center gap-6 ml-8">
