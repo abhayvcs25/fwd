@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom";
 
 export default function WorkerDashboard (){
-  const [activeNav, setActiveNav] = useState("Dashboard")
+  const [activeNav, setActiveNav] = useState("dashboard")
 
   const navigate = useNavigate();
   
@@ -10,17 +10,6 @@ export default function WorkerDashboard (){
       // you can clear tokens here if needed
       navigate("/");
     };
-
-  const navItems = ["Dashboard", "My Jobs", "Earnings", "Messages", "Reviews", "Settings","Edit Profile"]
-  const navRoutes = {
-    "Dashboard": "/worker-dashboard",
-    "My Jobs": "/worker-jobs",
-    "Earnings": "/worker-earnings",
-    "Messages": "/worker-messages",
-    "Reviews": "/worker-reviews",
-    "Settings": "/worker-settings",
-    "Edit Profile": "/worker-profile-edit"
-  };
 
 
   const upcomingJobs = [
@@ -303,82 +292,52 @@ export default function WorkerDashboard (){
         return styles.statusPending
     }
   }
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard' , path: "/worker-dashboard"},
+    { id: 'messages', label: 'Messages' , path: "/worker-messages"},
+    { id: 'reviews', label: 'Reviews' , path: "/worker-reviews"},
+    { id: 'Edit Profile', label: 'Edit Profile' , path: "/worker-profile-edit"},
+  ];
 
   return (
     <div style={styles.container}>
       {/* Navbar */}
-      <div style={styles.navbar}>
-        <div style={styles.navbarTitle}>💼 DailyJobs</div>
-        <div style={styles.navbarRight}>
-          <span style={styles.navbarIcon}>🔔</span>
-          <div style={styles.navbarAvatar}>JD</div>
-        </div>
-      </div>
-
-      {/* Sidebar */}
-      <div
-      style={{
-         position: "fixed",
-       left: 0,
-    top: "70px",
-    height: "calc(100vh - 70px)",
-    width: "220px",
-    backgroundColor: "#f9f9f9",
-    borderRight: "1px solid #ddd",
-    display: "flex",
-    flexDirection: "column",
-      }}
-    >
-      {/* Navigation Items */}
-      <div style={{ flex: 1, padding: "12px 0" }}>
-        {navItems.map((item) => (
-          <div
-            key={item}
-            onClick={() => {
-            setActiveNav(item);
-            navigate(navRoutes[item]);   // 🔥 redirect user
-          }}
-            style={{
-              padding: "14px 20px",
-              cursor: "pointer",
-              fontSize: "16px",
-              borderRadius: "6px",
-              margin: "6px 10px",
-              backgroundColor: activeNav === item ? "#007BFF" : "transparent",
-              color: activeNav === item ? "#fff" : "#333",
-              fontWeight: activeNav === item ? "600" : "400",
-            }}
-          >
-            {item}
+       <aside className="fixed left-0 top-0 h-screen w-[230px] bg-white border-r border-gray-200 rounded-r-xl">
+        {/* Logo Row */}
+        <div className="flex items-center px-4 py-6 border-b border-gray-200">
+          <div className="w-8 h-8 rounded-full bg-[#007BFF] flex items-center justify-center text-white font-bold mr-3">
+            D
           </div>
-        ))}
-      </div>
+          <span className="text-[#007BFF] font-bold text-xl">DailyJobs</span>
+        </div>
 
-      {/* Logout Button */}
-      <div
-        style={{
-          padding: "16px",
-          borderTop: "1px solid #ddd",
-        }}
-      >
-        <button
-          onClick={handleLogout}
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            backgroundColor: "#FFC107",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "15px",
-            fontWeight: "600",
-          }}
-        >
-          Logout
-        </button>
-      </div>
-    </div>
+        {/* Navigation Items */}
+        <nav className="flex flex-col px-4 py-6 space-y-2">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => 
+                {setActiveNav(item.id);
+                navigate(item.path);
+                }
+              }
+              className={`block w-full text-left px-4 py-3 rounded-lg cursor-pointer transition ${
+                activeNav === item.id
+                  ? 'bg-[#007BFF] text-white font-semibold shadow-sm'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <button className="w-[90%] mx-auto block bg-[#FFC107] text-white font-bold px-4 py-3 rounded-lg text-center shadow hover:opacity-90 transition mb-4">
+            Logout
+          </button>
+        </div>
+      </aside>
 
       {/* Main Content */}
       <div style={styles.mainContent}>

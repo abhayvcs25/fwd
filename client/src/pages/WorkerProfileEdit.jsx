@@ -34,17 +34,14 @@ export default function WorkerProfileEdit() {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' , path: "/worker-dashboard"},
-    { id: 'jobs', label: 'My Jobs' , path: "/worker-jobs"},
-    { id: 'earnings', label: 'Earnings' , path: "/worker-earnings"},
     { id: 'messages', label: 'Messages' , path: "/worker-messages"},
     { id: 'reviews', label: 'Reviews' , path: "/worker-reviews"},
-    { id: 'settings', label: 'Settings' , path: "/worker-settings"},
     { id: 'Edit Profile', label: 'Edit Profile' , path: "/worker-profile-edit"},
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className="fixed left-0 top-0 h-screen w-[230px] bg-white border-r border-gray-200 rounded-r-xl">
+       <aside className="fixed left-0 top-0 h-screen w-[230px] bg-white border-r border-gray-200 rounded-r-xl">
         {/* Logo Row */}
         <div className="flex items-center px-4 py-6 border-b border-gray-200">
           <div className="w-8 h-8 rounded-full bg-[#007BFF] flex items-center justify-center text-white font-bold mr-3">
@@ -80,6 +77,8 @@ export default function WorkerProfileEdit() {
           </button>
         </div>
       </aside>
+
+
 
       <nav className="fixed top-0 left-[230px] right-0 h-[70px] bg-white shadow-sm flex items-center justify-between px-6 z-40">
         <div className="flex-1"></div>

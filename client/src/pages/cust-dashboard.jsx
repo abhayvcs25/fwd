@@ -1,7 +1,7 @@
 
 import { useState } from "react"
 import { Home, BookOpen, Heart, MessageSquare, User, Settings, HelpCircle, LogOut, Search, Bell } from "lucide-react"
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
   
 export default function CustomerDashboard() {
@@ -78,57 +78,55 @@ export default function CustomerDashboard() {
 
   // Sidebar menu items
   const menuItems = [
-    { icon: Home, label: "Home", href: "#" },
-    { icon: BookOpen, label: "My Bookings", href: "#" },
-    { icon: Heart, label: "Favorites", href: "#" },
-    { icon: MessageSquare, label: "Messages", href: "#" },
-    { icon: User, label: "Profile", href: "#" },
-    { icon: Settings, label: "Settings", href: "#" },
-    { icon: HelpCircle, label: "Support", href: "#" },
+    { icon: Home, label: "Home", href: "/customer-dashboard" },
+    { icon: Heart, label: "Favorites", href: "/customer-Favorites" },
+    { icon: MessageSquare, label: "Messages", href: "/Messages" },
+    { icon: User, label: "Profile", href: "/user-profile" },
+    { icon: HelpCircle, label: "Support", href: "/about" },
   ]
  
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* SIDEBAR */}
-      <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col shadow-sm`}
-      >
-        {/* Logo */}
-        <div className="p-6 flex items-center justify-center border-b border-gray-200">
-          <div className={`flex items-center ${sidebarOpen ? "justify-start" : "justify-center"} w-full`}>
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-              SM
-            </div>
-            {sidebarOpen && <span className="ml-3 font-bold text-lg text-gray-900">DailyJobs</span>}
-          </div>
-        </div>
-
-        {/* Menu Items */}
-        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+            <aside
+              className={`${
+                sidebarOpen ? "w-64" : "w-20"
+              } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col shadow-sm`}
             >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="ml-3 text-sm font-medium">{item.label}</span>}
-            </a>
-          ))}
-        </nav>
-
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors group font-medium">
-            <LogOut className="w-5 h-5" />
-            {sidebarOpen && <span className="ml-2 text-sm">Logout</span>}
-          </button>
-        </div>
-      </aside>
+              {/* Logo */}
+              <div className="p-6 flex items-center justify-center border-b border-gray-200">
+                <div className={`flex items-center ${sidebarOpen ? "justify-start" : "justify-center"} w-full`}>
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                    SM
+                  </div>
+                  {sidebarOpen && <span className="ml-3 font-bold text-lg text-gray-900">DailyJobs</span>}
+                </div>
+              </div>
+      
+              {/* Menu Items */}
+              <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+                {menuItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {sidebarOpen && <span className="ml-3 text-sm font-medium">{item.label}</span>}
+                  </Link>
+                ))}
+              </nav>
+      
+      
+              {/* Logout Button */}
+              <div className="p-4 border-t border-gray-200">
+                <button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors group font-medium">
+                  <LogOut className="w-5 h-5" />
+                  {sidebarOpen && <span className="ml-2 text-sm">Logout</span>}
+                </button>
+              </div>
+            </aside>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
