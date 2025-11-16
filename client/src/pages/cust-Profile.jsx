@@ -12,6 +12,9 @@ const handleLogout = () => {
     // you can clear tokens here if needed
     navigate("/");
   };
+  const handleSearchClick = () => {
+    navigate("/search"); // <-- change to your search page route
+  };
   const [userData, setUserData] = useState({
     fullName: 'Abhay Pawar',
     email: 'abhay.pawar@skillmatch.com',
@@ -337,7 +340,7 @@ const handleLogout = () => {
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <div style={searchContainerStyle}>
+            <div style={searchContainerStyle} onClick={handleSearchClick}>
               <Search size={18} color="#666" />
               <input
                 type="text"

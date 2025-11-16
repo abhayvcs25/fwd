@@ -10,6 +10,12 @@ export default function WorkersSearch() {
       // you can clear tokens here if needed
       navigate("/");
     };
+     const handleSearchClick = () => {
+    navigate("/search"); // <-- change to your search page route
+  };
+   const handleProfileClick = () => {
+    navigate("/worker-detail/:id"); // <-- change to your search page route
+  };
   const [workers, setWorkers] = useState([
     {
       id: 1,
@@ -451,7 +457,7 @@ export default function WorkersSearch() {
                   <div style={phoneStyle}>{worker.phone}</div>
 
                   <div style={buttonGroupStyle}>
-                    <button
+                    <button onClick={handleProfileClick}
                       style={profileButtonStyle}
                       onMouseEnter={(e) => Object.assign(e.currentTarget.style, profileButtonHoverStyle)}
                       onMouseLeave={(e) => Object.assign(e.currentTarget.style, profileButtonStyle)}

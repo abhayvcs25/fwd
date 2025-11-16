@@ -17,6 +17,7 @@ import WorkerMessages from './pages/WorkerMessages'
 import Favorites from './pages/Favorites'
 import WorkerReviews from './pages/WorkerReviews'
 import WorkersSearch from './pages/WorkersSearch'
+import WorkerDetail from './pages/WorkerDetail'
 
 function App(){
   return (
@@ -35,6 +36,7 @@ function App(){
         <Route path="/worker-messages" element={<WorkerMessages/>}/>
         <Route path="/worker-reviews" element={<WorkerReviews/>}/>
         <Route path="/workers-search" element={<WorkersSearch/>}/>
+        <Route path="/worker-detail/:id" element={<WorkerDetail/>}/>
         <Route path="/about" element={<About/>}/>
         <Route path="*" element={<NotFound/>}/>
       </Routes>

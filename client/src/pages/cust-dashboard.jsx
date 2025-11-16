@@ -1,6 +1,6 @@
 
 import { useState } from "react"
-import { Home, BookOpen, Heart, MessageSquare, User, Settings, HelpCircle, LogOut, Search, Bell } from "lucide-react"
+import { Home, X, Heart, MessageSquare, User, Menu, HelpCircle, LogOut, Search, Bell } from "lucide-react"
 import { useNavigate, Link } from "react-router-dom";
 
   
@@ -85,6 +85,47 @@ export default function CustomerDashboard() {
     { icon: HelpCircle, label: "Support", href: "/about" },
   ]
  
+  const navbarStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    padding: '15px 30px',
+    borderBottom: '1px solid #e0e0e0',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+  };
+  const searchContainerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: '#f5f5f5',
+    padding: '8px 15px',
+    borderRadius: '8px',
+    flex: '0 0 350px',
+  };
+  const rightNavStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+  };
+
+  const userProfileStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  };
+  const avatarStyle = {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    backgroundColor: '#007BFF',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: '16px',
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -131,47 +172,51 @@ export default function CustomerDashboard() {
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* NAVBAR */}
-        <header className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between px-8 py-4">
-            {/* Left: Search Bar */}
-            <div className="flex-1 max-w-md">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-
-        <input
-          type="text"
-          placeholder="Search services, workers..."
-          onClick={handleSearchClick}   // ⭐ click triggers navigation
-          readOnly                    // ⭐ prevents typing
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 
-                     focus:border-transparent text-sm cursor-pointer"
-        />
-      </div>
-    </div>
-
-            {/* Right: Notifications & Profile */}
-            <div className="flex items-center gap-6 ml-8">
-              {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-
-              {/* Profile Dropdown */}
-              <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold cursor-pointer hover:shadow-lg transition-shadow">
-                  {user.avatar}
-                </div>
-              </div>
+       <div style={navbarStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '20px',
+                color: '#333',
+              }}
+            >
+              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <div style={searchContainerStyle} onClick={handleSearchClick}>
+              <Search size={18} color="#666" />
+              <input
+                type="text"
+                placeholder="Search services, workers..."
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  outline: 'none',
+                  flex: 1,
+                  fontSize: '14px',
+                }}
+              />
             </div>
           </div>
-        </header>
 
+          <div style={rightNavStyle}>
+            <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
+            <div style={userProfileStyle}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+                  Abhay Pawar
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  abhay.pawar@skillmatch.com
+                </div>
+              </div>
+              <div style={avatarStyle}>AP</div>
+            </div>
+          </div>
+        </div>
         {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-8">

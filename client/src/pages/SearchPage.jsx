@@ -1,37 +1,41 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Home, BookOpen, Heart, MessageCircle, User, Settings, HelpCircle, LogOut, Search, Bell, ArrowLeft, Menu } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
+import { Home, BookOpen, Heart, MessageSquare, User, Settings, HelpCircle, LogOut, Search, Bell, ArrowLeft, Menu } from 'lucide-react';
+import { useNavigate,Link } from "react-router-dom";
+
 
 export default function SearchPage() {
   const [sidebarOpen] = useState(true);
-  const navigate = useNavigate();
+   const navigate = useNavigate();
+  
+    const handleLogout = () => {
+      // you can clear tokens here if needed
+      navigate("/");
+    };
 
-  const sidebarItems = [
-    { icon: Home, label: 'Home', color: '#007BFF' },
-    { icon: BookOpen, label: 'My Bookings', color: '#007BFF' },
-    { icon: Heart, label: 'Favorites', color: '#007BFF' },
-    { icon: MessageCircle, label: 'Messages', color: '#007BFF' },
-    { icon: User, label: 'Profile', color: '#007BFF' },
-    { icon: Settings, label: 'Settings', color: '#007BFF' },
-    { icon: HelpCircle, label: 'Support', color: '#007BFF' },
-  ];
+  const menuItems = [
+    { icon: Home, label: "Home", href: "/customer-dashboard" },
+    { icon: Heart, label: "Favorites", href: "/customer-Favorites" },
+    { icon: MessageSquare, label: "Messages", href: "/Messages" },
+    { icon: User, label: "Profile", href: "/user-profile" },
+    { icon: HelpCircle, label: "Support", href: "/about" },
+  ]
 
   const services = [
-    { name: 'Electrician', bg: '#FFC107' },
-    { name: 'Plumber', bg: '#007BFF' },
-    { name: 'Barber', bg: '#FFC107' },
-    { name: 'Domestic Helper', bg: '#007BFF' },
-    { name: 'Painter', bg: '#FFC107' },
-    { name: 'Carpenter', bg: '#007BFF' },
-    { name: 'AC Mechanic', bg: '#FFC107' },
-    { name: 'Gardener', bg: '#007BFF' },
-    { name: 'Driver', bg: '#FFC107' },
-    { name: 'Cook', bg: '#007BFF' },
-    { name: 'Laundry', bg: '#FFC107' },
-    { name: 'Technician', bg: '#007BFF' },
-  ];
+  { name: 'Electrician', bg: '#FFC107', path: '/workers-search' },
+  { name: 'Plumber', bg: '#007BFF', path: '/workers-search' },
+  { name: 'Barber', bg: '#FFC107', path: '/workers-search' },
+  { name: 'Domestic Helper', bg: '#007BFF', path: '/workers-search' },
+  { name: 'Painter', bg: '#FFC107', path: '/workers-search' },
+  { name: 'Carpenter', bg: '#007BFF', path: '/workers-search' },
+  { name: 'AC Mechanic', bg: '#FFC107', path: '/workers-search' },
+  { name: 'Gardener', bg: '#007BFF', path: '/workers-search' },
+  { name: 'Driver', bg: '#FFC107', path: '/workers-search' },
+  { name: 'Cook', bg: '#007BFF', path: '/workers-search' },
+  { name: 'Laundry', bg: '#FFC107', path: '/workers-search' },
+  { name: 'Technician', bg: '#007BFF', path: '/workers-search' },
+];
 
   const popularSearches = [
     'Electrician near me',
@@ -105,7 +109,6 @@ export default function SearchPage() {
       transition: 'all 0.3s ease',
     },
     mainContent: {
-      marginLeft: '280px',
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
@@ -156,7 +159,7 @@ export default function SearchPage() {
       padding: '16px 24px',
       backgroundColor: '#ffffff',
       borderRadius: '12px',
-      margin: '0 24px 24px 24px',
+      margin: '24px 24px 24px 24px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
     },
     sectionTitle: {
@@ -247,67 +250,98 @@ export default function SearchPage() {
       marginLeft: '8px',
     },
   };
-
+const handleSearchClick = () => {
+    navigate("/search"); // <-- change to your search page route
+  };
+  const user = {
+    name: "Abhay Pawar",
+    email: "abhay.pawar@skillmatch.com",
+    avatar: "AP",
+  }
   return (
     <div style={styles.container}>
-      <nav style={styles.sidebar}>
-        <div style={styles.sidebarMenu}>
-          {sidebarItems.map((item, idx) => (
-            <div
-              key={idx}
-              style={{
-                ...styles.menuItem,
-                ...{ cursor: 'pointer' },
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f0f0f0';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
+       <aside
+              className={`${
+                sidebarOpen ? "w-64" : "w-20"
+              } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col shadow-sm`}
             >
-              <item.icon size={20} color={item.color} />
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <button
-          style={styles.logoutBtn}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#ffcccc';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#ffe6e6';
-          }}
-        >
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </nav>
+              {/* Logo */}
+              <div className="p-6 flex items-center justify-center border-b border-gray-200">
+                <div className={`flex items-center ${sidebarOpen ? "justify-start" : "justify-center"} w-full`}>
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                    SM
+                  </div>
+                  {sidebarOpen && <span className="ml-3 font-bold text-lg text-gray-900">DailyJobs</span>}
+                </div>
+              </div>
+      
+              {/* Menu Items */}
+              <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+                {menuItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {sidebarOpen && <span className="ml-3 text-sm font-medium">{item.label}</span>}
+                  </Link>
+                ))}
+              </nav>
+      
+      
+              {/* Logout Button */}
+              <div className="p-4 border-t border-gray-200">
+                <button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors group font-medium">
+                  <LogOut className="w-5 h-5" />
+                  {sidebarOpen && <span className="ml-2 text-sm">Logout</span>}
+                </button>
+              </div>
+            </aside>
 
       <div style={styles.mainContent}>
-        <header style={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <ArrowLeft size={20} color="#333" cursor="pointer" onClick={() => navigate(-1) }/>
-          </div>
-          <div style={styles.headerIcons}>
-            <Bell size={20} color="#333" cursor="pointer" />
-            <User size={20} color="#333" cursor="pointer" />
-            <Menu size={20} color="#333" cursor="pointer" />
+        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* NAVBAR */}
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between px-8 py-4">
+            {/* Left: Search Bar */}
+            <div className="flex-1 max-w-md">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+        <input
+          type="text"
+          placeholder="Search services, workers..."
+          onClick={handleSearchClick}   // ⭐ click triggers navigation
+          readOnly                    // ⭐ prevents typing
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 
+                     focus:border-transparent text-sm cursor-pointer"
+        />
+      </div>
+    </div>
+
+            {/* Right: Notifications & Profile */}
+            <div className="flex items-center gap-6 ml-8">
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
+                <Bell className="w-6 h-6" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+
+              {/* Profile Dropdown */}
+              <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold cursor-pointer hover:shadow-lg transition-shadow">
+                  {user.avatar}
+                </div>
+              </div>
+            </div>
           </div>
         </header>
-
-        <div style={styles.searchContainer}>
-          <div style={styles.searchBar}>
-            <Search size={18} color="#007BFF" />
-            <input
-              type="text"
-              placeholder="Search workers, services or locations…"
-              style={styles.searchInput}
-            />
-          </div>
-        </div>
 
         <div style={styles.footerSection}>
           <div style={styles.sectionTitle}>Popular Searches</div>
@@ -338,6 +372,11 @@ export default function SearchPage() {
 
         <div style={styles.serviceGrid}>
           {services.map((service, idx) => (
+             <Link
+    key={idx}
+    to={service.path}
+    style={{ textDecoration: "none" }}
+  >
             <div
               key={idx}
               style={styles.serviceItem}
@@ -361,7 +400,9 @@ export default function SearchPage() {
               </div>
               <div style={styles.serviceLabel}>{service.name}</div>
             </div>
+             </Link>
           ))}
+         
         </div>
 
         <footer style={styles.pageFooter}>
@@ -372,5 +413,6 @@ export default function SearchPage() {
         </footer>
       </div>
     </div>
+  </div>
   );
 }
