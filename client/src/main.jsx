@@ -16,6 +16,7 @@ import Messages from './pages/cust-Messages'
 import WorkerMessages from './pages/WorkerMessages'
 import Favorites from './pages/Favorites'
 import WorkerReviews from './pages/WorkerReviews'
+import WorkersSearch from './pages/WorkersSearch'
 
 function App(){
   return (
@@ -33,6 +34,7 @@ function App(){
         <Route path="/worker-profile-edit" element={<WorkerProfileEdit/>}/>
         <Route path="/worker-messages" element={<WorkerMessages/>}/>
         <Route path="/worker-reviews" element={<WorkerReviews/>}/>
+        <Route path="/workers-search" element={<WorkersSearch/>}/>
         <Route path="/about" element={<About/>}/>
         <Route path="*" element={<NotFound/>}/>
       </Routes>

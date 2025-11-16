@@ -69,6 +69,7 @@ export default function CustomerAuth() {
         phone: "",
         location: "",
       })
+      navigate('/customer-dashboard');
     }
 
     setErrors(newErrors)

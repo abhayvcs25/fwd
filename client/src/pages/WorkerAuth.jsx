@@ -71,6 +71,7 @@ export default function WorkerAuth() {
         experience: "",
         location: "",
       })
+      navigate('/worker-dashboard');
       setErrors({})
     } else {
       setErrors(newErrors)
