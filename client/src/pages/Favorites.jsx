@@ -498,7 +498,7 @@ export default function Favorites() {
                   <div style={priceStyle}>{worker.price}</div>
 
                   <div style={buttonGroupStyle}>
-                    <button
+                    <button 
                       style={contactButtonStyle}
                       onMouseEnter={(e) => {
                         Object.assign(e.currentTarget.style, {

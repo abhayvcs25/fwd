@@ -26,54 +26,81 @@ export default function CustomerAuth() {
 
   const navigate = useNavigate();
   // Handle login submit
-  const handleLoginSubmit = (e) => {
-    e.preventDefault()
-    const newErrors = {}
+  const handleLoginSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!loginData.email) newErrors.email = "Email is required"
-    else if (!validateEmail(loginData.email)) newErrors.email = "Invalid email format"
-
-    if (!loginData.password) newErrors.password = "Password is required"
-
-    if (Object.keys(newErrors).length === 0) {
-      navigate('/customer-dashboard');
-      setLoginData({ email: "", password: "" })
-    }
-
-    setErrors(newErrors)
+  const newErrors = {};
+  if (!loginData.email) newErrors.email = 'Email is required';
+  if (!loginData.password) newErrors.password = 'Password is required';
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
   }
+
+  try {
+    const response = await fetch('http://localhost:5000/api/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(loginData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Display server error
+      setErrors({ server: data.message });
+    } else {
+      // Login successful
+      localStorage.setItem('token', data.token);
+      navigate('/customer-dashboard');
+      setLoginData({ email: '', password: '' });
+    }
+  } catch (error) {
+    console.error(error);
+    setErrors({ server: 'Something went wrong. Please try again.' });
+  }
+};
+
+
 
   // Handle register submit
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault()
-    const newErrors = {}
+  const handleRegisterSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!registerData.fullName) newErrors.fullName = "Full Name is required"
-    if (!registerData.email) newErrors.email = "Email is required"
-    else if (!validateEmail(registerData.email)) newErrors.email = "Invalid email format"
+  const newErrors = {};
 
-    if (!registerData.password) newErrors.password = "Password is required"
-    else if (registerData.password.length < 6) newErrors.password = "Password must be at least 6 characters"
+  if (!registerData.fullName) newErrors.fullName = "Full Name is required";
+  if (!registerData.email) newErrors.email = "Email is required";
+  if (!registerData.password) newErrors.password = "Password is required";
 
-    if (!registerData.companyName) newErrors.companyName = "Company/Individual name is required"
-    if (!registerData.phone) newErrors.phone = "Phone number is required"
-    if (!registerData.location) newErrors.location = "Location is required"
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
 
-    if (Object.keys(newErrors).length === 0) {
-      alert("Registration successful! Welcome to SkillMatch.")
-      setRegisterData({
-        fullName: "",
-        email: "",
-        password: "",
-        companyName: "",
-        phone: "",
-        location: "",
-      })
-      navigate('/customer-dashboard');
+  try {
+    const res = await fetch("http://localhost:5000/api/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(registerData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
     }
 
-    setErrors(newErrors)
+    alert("Registration successful!");
+    navigate("/customer-dashboard");
+
+  } catch (error) {
+    console.error(error);
+    alert("Server error");
   }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ backgroundColor: "#F8F9FA" }}>
@@ -126,6 +153,13 @@ export default function CustomerAuth() {
           {/* Login Form */}
           {activeTab === "login" && (
             <form onSubmit={handleLoginSubmit}>
+              {/* Server error message */}
+              {errors.server && (
+                <div className="mb-4">
+                  <p className="text-red-500 text-sm" style={{ fontFamily: 'Roboto' }}>{errors.server}</p>
+                </div>
+              )}
+
               {/* Email */}
               <div className="mb-5">
                 <label className="block text-sm font-semibold mb-2 text-gray-700" style={{ fontFamily: "Poppins" }}>
