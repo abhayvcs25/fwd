@@ -1,36 +1,86 @@
-import { useState } from 'react';
+import { useState ,useEffect} from 'react';
 import { useNavigate } from "react-router-dom";
 
 export default function WorkerProfileEdit() {
   const [activeNav, setActiveNav] = useState('Edit Profile');
   const navigate = useNavigate();
 
-   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-    }));
-    };
+   // Track all fields including location fields
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    age: '',
-    gender: '',
-    skills: '',
-    experience: '',
-    location: '',
-  });
+  fullName: "",
+  email: "",
+  password: "",   // optional: leave blank if not changing
+  age: "",
+  gender: "",
+  skills: "",         // main skills as comma-separated string
+  experience: "",
+  city: "",
+  state: "",
+  country: "",
+  profileTitle: "",
+  profileBio: "",
+  availability: "available",
+  hourlyRate: 0,
+});
+
+useEffect(() => {
+  const workerId = localStorage.getItem("workerId");
+  if (!workerId) return;
+
+  fetch(`http://localhost:5000/api/workers/me?id=${workerId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setFormData({
+        fullName: data.fullName || "",
+        email: data.email || "",
+        password: "", // keep blank for security
+        age: data.age || "",
+        gender: data.gender || "",
+        skills: (data.skills || []).join(", "), // array → string
+        experience: data.experience || "",
+        city: data.location?.city || "",
+        state: data.location?.state || "",
+        country: data.location?.country || "",
+        profileTitle: data.profile?.title || "",
+        profileBio: data.profile?.bio || "",
+        availability: data.availability || "available",
+        hourlyRate: data.hourlyRate || 0,
+      });
+    })
+    .catch((err) => console.error(err));
+}, []);
 
 
 
 
-  const handleSave = () => {
-    console.log('Profile data saved:', formData);
-    alert('Profile updated successfully!');
-  };
+// unchanged - generic input handler
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+// Save / submit function
+const handleSave = async () => {
+  try {
+    const response = await fetch("http://localhost:5000/api/workers/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),   // <--- send raw values
+    });
+
+    const data = await response.json();
+    console.log("Profile data saved:", data);
+
+    alert("Profile updated successfully!");
+  } catch (err) {
+    console.error("Error saving profile:", err);
+  }
+};
+
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' , path: "/worker-dashboard"},
@@ -103,141 +153,241 @@ export default function WorkerProfileEdit() {
 
           {/* Edit Form Card */}
           <div className="bg-white p-6 rounded-xl shadow max-w-xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h2>
+  <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h2>
 
-            <form className="space-y-4">
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
-                  placeholder="Enter your full name"
-                />
-              </div>
+  <form className="space-y-4">
 
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
-                  placeholder="Enter your email"
-                />
-              </div>
+    {/* Full Name */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Full Name
+      </label>
+      <input
+        type="text"
+        name="fullName"
+        value={formData.fullName}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your full name"
+      />
+    </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
-                  placeholder="Enter your password"
-                />
-              </div>
+    {/* Email */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Email
+      </label>
+      <input
+        type="email"
+        name="email"
+        value={formData.email}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your email"
+      />
+    </div>
 
-              {/* Age */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
-                  placeholder="Enter your age"
-                />
-              </div>
+    {/* Password */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Password
+      </label>
+      <input
+        type="password"
+        name="password"
+        value={formData.password}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your password"
+      />
+    </div>
 
-              {/* Gender */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Gender
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
-                >
-                  <option value="">Select your gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+    {/* Age */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Age
+      </label>
+      <input
+        type="number"
+        name="age"
+        value={formData.age}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your age"
+      />
+    </div>
 
-              {/* Skills */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Skills
-                </label>
-                <textarea
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition resize-none"
-                  placeholder="List your skills"
-                  rows={3}
-                />
-              </div>
+    {/* Gender */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Gender
+      </label>
+      <select
+        name="gender"
+        value={formData.gender}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+      >
+        <option value="">Select your gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
 
-              {/* Experience */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Experience
-                </label>
-                <textarea
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition resize-none"
-                  placeholder="Describe your professional experience"
-                  rows={3}
-                />
-              </div>
+    {/* Skills */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Skills
+      </label>
+      <textarea
+        name="skills"
+        value={formData.skills}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition resize-none"
+        placeholder="List your skills"
+        rows={3}
+      />
+    </div>
 
-              {/* Location */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
-                  placeholder="Enter your location"
-                />
-              </div>
+    {/* Experience */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Experience
+      </label>
+      <textarea
+        name="experience"
+        value={formData.experience}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition resize-none"
+        placeholder="Describe your professional experience"
+        rows={3}
+      />
+    </div>
 
-              <button
-                type="button"
-                onClick={handleSave}
-                className="w-full bg-[#007BFF] text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold mt-4"
-              >
-                Save Changes
-              </button>
-            </form>
-          </div>
+    {/* Location City */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        City
+      </label>
+      <input
+        type="text"
+        name="city"
+        value={formData.city}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your city"
+      />
+    </div>
+
+    {/* Location State */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        State
+      </label>
+      <input
+        type="text"
+        name="state"
+        value={formData.state}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your state"
+      />
+    </div>
+
+    {/* Location Country */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Country
+      </label>
+      <input
+        type="text"
+        name="country"
+        value={formData.country}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter your country"
+      />
+    </div>
+
+    {/* PROFILE → Title */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Profile Title
+      </label>
+      <input
+        type="text"
+        name="profileTitle"
+        value={formData.profileTitle}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="e.g. Electrician | Plumber | Carpenter"
+      />
+    </div>
+
+    {/* PROFILE → Bio */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Bio
+      </label>
+      <textarea
+        name="profileBio"
+        value={formData.profileBio}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition resize-none"
+        placeholder="Write a short bio"
+        rows={3}
+      />
+    </div>
+
+    {/* PROFILE → Profile Skills */}
+
+    {/* PROFILE → Portfolio */}
+
+    {/* Availability */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Availability
+      </label>
+      <select
+        name="availability"
+        value={formData.availability}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+      >
+        <option value="">Select status</option>
+        <option value="available">Available</option>
+        <option value="busy">Busy</option>
+        <option value="offline">Offline</option>
+      </select>
+    </div>
+
+    {/* Hourly Rate */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Hourly Rate (₹)
+      </label>
+      <input
+        type="number"
+        name="hourlyRate"
+        value={formData.hourlyRate}
+        onChange={handleInputChange}
+        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007BFF] outline-none transition"
+        placeholder="Enter hourly rate"
+      />
+    </div>
+
+    {/* Save Button */}
+    <button
+      type="button"
+      onClick={handleSave}
+      className="w-full bg-[#007BFF] text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold mt-4"
+    >
+      Save Changes
+    </button>
+  </form>
+</div>
+
         </div>
       </main>
     </div>

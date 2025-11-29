@@ -1,10 +1,36 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {Home, Heart, MessageSquare, User, HelpCircle, Menu, X, Search, Bell, LogOut, Star, Clock, DollarSign, Phone, Mail, MapPin, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function WorkerDetail() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+
+  // initialize favorite state if user has this worker in favorites
+  useEffect(() => {
+    const init = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return; // not logged in
+
+      try {
+        const res = await fetch('http://localhost:5000/favorite/list', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const favs = data.favorites || [];
+        // worker.id may be number/string; convert to string when possible
+        const found = favs.find(f => String(f.workerId) === String(worker.id) || (f.workerId && f.workerId._id && String(f.workerId._id) === String(worker.id)));
+        if (found) setIsFavorite(true);
+      } catch (err) {
+        console.error('Failed to load favorites', err);
+      }
+    };
+
+    init();
+  }, []);
   const navigate = useNavigate();
   
     const handleLogout = () => {
@@ -426,7 +452,48 @@ export default function WorkerDetail() {
 
             {/* Right - Worker Details */}
             <div style={profileInfoStyle}>
-              <div style={nameStyle}>{worker.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={nameStyle}>{worker.name}</div>
+                {/* Favorite toggle star */}
+                <div
+                  role="button"
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                  onClick={async () => {
+                    // toggle favorite
+                    const token = localStorage.getItem('token');
+                    if (!token) return navigate('/customer-auth');
+
+                    setFavLoading(true);
+                    try {
+                      if (!isFavorite) {
+                        const res = await fetch('http://localhost:5000/favorite/add', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ workerId: worker.id })
+                        });
+                        if (!res.ok) throw new Error('Failed to add favorite');
+                        setIsFavorite(true);
+                      } else {
+                        const res = await fetch('http://localhost:5000/favorite/remove', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ workerId: worker.id })
+                        });
+                        if (!res.ok) throw new Error('Failed to remove favorite');
+                        setIsFavorite(false);
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      // optionally add UI feedback
+                    } finally {
+                      setFavLoading(false);
+                    }
+                  }}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                >
+                  <Star size={20} color={isFavorite ? '#FFC107' : '#999'} fill={isFavorite ? '#FFC107' : 'none'} />
+                </div>
+              </div>
               <div style={titleStyle}>{worker.title}</div>
 
               {/* Rating */}

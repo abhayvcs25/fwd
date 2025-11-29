@@ -74,9 +74,40 @@ export default function Favorites() {
     },
   ]);
 
-  const handleRemoveFavorite = (id) => {
-    setFavorites(favorites.filter((fav) => fav.id !== id));
-  };
+  const handleRemoveFavorite = async (workerId) => {
+  try {
+    const res = await fetch("http://localhost:5000/favorite/remove", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // if using JWT
+      },
+      body: JSON.stringify({ workerId }),
+    });
+
+    // Some responses (404 from dev server or 204) may have empty body — parse safely
+    let data = {};
+    if (res.headers.get('content-type')?.includes('application/json')) {
+      try { data = await res.json(); } catch (e) { data = {}; }
+    }
+
+    if (!res.ok) {
+      console.error(data.message || `Failed to remove (status ${res.status})`);
+      return;
+    }
+
+    // Update UI after successful delete.
+    // Support both mocked shape (fav.id) and real API shape (fav.workerId or fav.workerId._id)
+    setFavorites((prev) => prev.filter((fav) => {
+      const favWorkerId = fav.workerId ? (fav.workerId._id || fav.workerId) : fav.id;
+      return String(favWorkerId) !== String(workerId);
+    }));
+
+  } catch (error) {
+    console.error("Error removing favorite:", error);
+  }
+};
+
 
   const containerStyle = {
     display: 'flex',

@@ -333,7 +333,7 @@ export default function WorkerDashboard (){
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <button className="w-[90%] mx-auto block bg-[#FFC107] text-white font-bold px-4 py-3 rounded-lg text-center shadow hover:opacity-90 transition mb-4">
+          <button onClick={handleLogout} className="w-[90%] mx-auto block bg-[#FFC107] text-white font-bold px-4 py-3 rounded-lg text-center shadow hover:opacity-90 transition mb-4">
             Logout
           </button>
         </div>

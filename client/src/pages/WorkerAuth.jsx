@@ -6,15 +6,17 @@ export default function WorkerAuth() {
   const [activeTab, setActiveTab] = useState("login")
   const [loginData, setLoginData] = useState({ email: "", password: "" })
   const [registerData, setRegisterData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    age: "",
-    gender: "",
-    skills: "",
-    experience: "",
-    location: "",
-  })
+  fullName: "",
+  email: "",
+  password: "",
+  age: "",
+  gender: "",
+  skills: "",
+  experience: "",
+  city: "",
+  state: "",
+  country: ""
+});
   const [errors, setErrors] = useState({})
 
   // Login validation
@@ -38,45 +40,115 @@ export default function WorkerAuth() {
     if (!registerData.gender) newErrors.gender = "Gender is required"
     if (!registerData.skills) newErrors.skills = "Skills are required"
     if (!registerData.experience) newErrors.experience = "Experience is required"
-    if (!registerData.location) newErrors.location = "Location is required"
+    if (!registerData.city || !registerData.state || !registerData.country) {
+      newErrors.location = "Complete location is required"
+    }
     return newErrors
   }
 
   const navigate = useNavigate();
 
-  const handleLoginSubmit = (e) => {
-    e.preventDefault()
-    const newErrors = validateLogin()
-    if (Object.keys(newErrors).length === 0) {
-      navigate('/worker-dashboard');
-      setLoginData({ email: "", password: "" })
-      setErrors({})
-    } else {
-      setErrors(newErrors)
-    }
+  const handleLoginSubmit = async (e) => {
+  e.preventDefault();
+
+  const newErrors = validateLogin();
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
   }
 
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault()
-    const newErrors = validateRegister()
-    if (Object.keys(newErrors).length === 0) {
-      alert("Registration successful! Welcome to SkillMatch.")
-      setRegisterData({
-        fullName: "",
-        email: "",
-        password: "",
-        age: "",
-        gender: "",
-        skills: "",
-        experience: "",
-        location: "",
-      })
-      navigate('/worker-dashboard');
-      setErrors({})
-    } else {
-      setErrors(newErrors)
+  try {
+    const res = await fetch("http://localhost:5000/workers/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: loginData.email,
+        password: loginData.password
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setErrors({ api: data.message || "Invalid email or password" });
+      return;
     }
+
+    // Save token for authenticated routes
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("workerId", data.worker.id);
+
+    navigate("/worker-dashboard");
+
+    setLoginData({ email: "", password: "" });
+    setErrors({});
+  } catch (error) {
+    console.error(error);
+    setErrors({ api: "Network error" });
   }
+};
+
+
+ const handleRegisterSubmit = async (e) => {
+  e.preventDefault();
+
+  const newErrors = validateRegister();
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/workers/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fullName: registerData.fullName,
+        email: registerData.email,
+        password: registerData.password,
+        age: Number(registerData.age),
+        gender: registerData.gender,
+        skills: registerData.skills.split(",").map(s => s.trim()),  // convert to array
+        experience: Number(registerData.experience),
+
+        // ✔ send full location object
+        location: {
+          city: registerData.city,
+          state: registerData.state,
+          country: registerData.country,
+        }
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setErrors({ api: data.message || "Registration failed" });
+      return;
+    }
+
+    alert("Worker registered successfully!");
+    navigate("/worker-dashboard");
+
+    setRegisterData({
+      fullName: "",
+      email: "",
+      password: "",
+      age: "",
+      gender: "",
+      skills: "",
+      experience: "",
+      city: "",
+      state: "",
+      country: ""
+    });
+
+    setErrors({});
+  } catch (error) {
+    console.error(error);
+    setErrors({ api: "Network error" });
+  }
+};
+
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -170,10 +242,12 @@ export default function WorkerAuth() {
 
             {/* Tab Content */}
             <div className="p-8">
+              {errors.api && <p className="text-red-500 text-sm mb-4">{errors.api}</p>}
               {/* Login Form */}
               {activeTab === "login" && (
                 <form onSubmit={handleLoginSubmit} className="space-y-6">
                   <div>
+                    
                     <label
                       className="block text-sm font-semibold mb-2"
                       style={{ color: "#333", fontFamily: "Poppins" }}
@@ -335,7 +409,53 @@ export default function WorkerAuth() {
                     {errors.skills && <p className="text-red-500 text-sm mt-1">{errors.skills}</p>}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    <div className="w-full">
+                      <label
+                        className="block text-sm font-semibold mb-2"
+                        style={{ color: "#333", fontFamily: "Poppins" }}
+                      >
+                        Location
+                      </label>
+
+                      <div className="grid grid-cols-1 gap-3">
+                        {/* City */}
+                        <input
+                          type="text"
+                          placeholder="City"
+                          value={registerData.city}
+                          onChange={(e) => setRegisterData({ ...registerData, city: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                          style={{ fontFamily: "Roboto" }}
+                        />
+
+                        {/* State */}
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={registerData.state}
+                          onChange={(e) => setRegisterData({ ...registerData, state: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                          style={{ fontFamily: "Roboto" }}
+                        />
+
+                        {/* Country */}
+                        <input
+                          type="text"
+                          placeholder="Country"
+                          value={registerData.country}
+                          onChange={(e) => setRegisterData({ ...registerData, country: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                          style={{ fontFamily: "Roboto" }}
+                        />
+                      </div>
+
+                      {errors.location && (
+                        <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+                      )}
+                    </div>
                     <div>
                       <label
                         className="block text-sm font-semibold mb-2"
@@ -344,7 +464,7 @@ export default function WorkerAuth() {
                         Experience (years)
                       </label>
                       <input
-                        type="number"
+                        type="number" min="0"
                         value={registerData.experience}
                         onChange={(e) => setRegisterData({ ...registerData, experience: e.target.value })}
                         placeholder="0"
@@ -354,24 +474,9 @@ export default function WorkerAuth() {
                       {errors.experience && <p className="text-red-500 text-sm mt-1">{errors.experience}</p>}
                     </div>
 
-                    <div>
-                      <label
-                        className="block text-sm font-semibold mb-2"
-                        style={{ color: "#333", fontFamily: "Poppins" }}
-                      >
-                        Location (City)
-                      </label>
-                      <input
-                        type="text"
-                        value={registerData.location}
-                        onChange={(e) => setRegisterData({ ...registerData, location: e.target.value })}
-                        placeholder="e.g. New York"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                        style={{ fontFamily: "Roboto" }}
-                      />
-                      {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
-                    </div>
-                  </div>
+                   
+
+                 
 
                   <button
                     type="submit"

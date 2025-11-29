@@ -1,7 +1,7 @@
 
 import { useNavigate, Link } from "react-router-dom";
-import React, { useState } from 'react';
-import { Home, Menu, Heart, MessageSquare, User, X, HelpCircle, LogOut, Search, Bell } from "lucide-react"
+import React, { useState, useEffect } from 'react';
+import { Home, Menu, Heart, MessageSquare, User, X, HelpCircle, LogOut, Search, Bell, Star } from "lucide-react"
 export default function WorkersSearch() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,6 +81,29 @@ export default function WorkersSearch() {
       image: '/professional-man-5.jpg',
     },
   ]);
+
+  const [favorites, setFavorites] = useState([]);
+  const [favLoadingIds, setFavLoadingIds] = useState({});
+
+  // load favorites for logged in user (only if authenticated)
+  useEffect(() => {
+    const initFavs = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('http://localhost:5000/favorite/list', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setFavorites(Array.isArray(data.favorites) ? data.favorites : []);
+      } catch (err) {
+        console.error('Failed to load favorites', err);
+      }
+    };
+
+    initFavs();
+  }, []);
 
   const containerStyle = {
     display: 'flex',
@@ -228,6 +251,7 @@ export default function WorkersSearch() {
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
+    position: 'relative',
   };
 
   const cardHoverStyle = {
@@ -421,11 +445,19 @@ export default function WorkersSearch() {
             <div style={titleStyle}>🔍 Search Workers</div>
             <div style={subtitleStyle}>
               {workers.length} workers available
+              {favorites.length > 0 && (
+                <span style={{ marginLeft: 12, color: '#007BFF', fontWeight: 600 }}>
+                  • {favorites.length} favorites
+                </span>
+              )}
             </div>
           </div>
 
           <div style={gridStyle}>
-            {workers.map((worker) => (
+            {workers.map((worker) => {
+              const wid = String(worker.id);
+              const isFav = favorites.some(f => String(f.workerId) === wid || (f.workerId && String(f.workerId._id || f.workerId) === wid));
+              return (
               <div
                 key={worker.id}
                 style={cardStyle}
@@ -443,6 +475,48 @@ export default function WorkersSearch() {
                     display: 'block',
                   }}
                 />
+
+                {/* favorite star overlay */}
+                <div style={{ position: 'absolute', right: 12, top: 12 }}>
+                  <div
+                    role="button"
+                    aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const token = localStorage.getItem('token');
+                      if (!token) return navigate('/customer-auth');
+                      if (favLoadingIds[wid]) return;
+                      setFavLoadingIds(prev => ({ ...prev, [wid]: true }));
+                      try {
+                        if (!isFav) {
+                          const res = await fetch('http://localhost:5000/favorite/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ workerId: worker.id })
+                          });
+                          if (!res.ok) throw new Error('Failed to add');
+                          const data = await res.json();
+                          setFavorites(prev => [...prev, data.favorite]);
+                        } else {
+                          const res = await fetch('http://localhost:5000/favorite/remove', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ workerId: worker.id })
+                          });
+                          if (!res.ok) throw new Error('Failed to remove');
+                          setFavorites(prev => prev.filter(f => !(String(f.workerId) === wid || (f.workerId && String(f.workerId._id || f.workerId) === wid))));
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setFavLoadingIds(prev => { const copy = { ...prev }; delete copy[wid]; return copy; });
+                      }
+                    }}
+                    style={{ background: 'rgba(255,255,255,0.95)', padding: 6, borderRadius: 999, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Star size={18} color={isFav ? '#FFC107' : '#999'} fill={isFav ? '#FFC107' : 'none'} />
+                  </div>
+                </div>
 
                 {/* Card Content */}
                 <div style={cardContentStyle}>
@@ -474,7 +548,7 @@ export default function WorkersSearch() {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </div>
