@@ -1,6 +1,5 @@
 const express = require('express');
-const router = express.Router();
-const Worker = require('../models/Worker');
+const router = express.Router(); 
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
 const Transaction = require('../models/Transaction');
@@ -12,7 +11,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret123";
 // ------------------------------------------------------
 // 1. REGISTER WORKER
 // ------------------------------------------------------
-const bcrypt = require("bcrypt");
 const Worker = require("../models/Worker"); // adjust path if needed
 
 router.post('/register', async (req, res) => {
@@ -139,6 +137,7 @@ router.get("/me", async (req, res) => {
     }
 
     const worker = await Worker.findById(workerId);
+    console.log(worker);
     if (!worker) {
       return res.status(404).json({ message: "Worker not found" });
     }
@@ -169,4 +168,108 @@ router.get("/me", async (req, res) => {
   }
 });
 
+
+
+// ------------------------------------------------------
+// UPDATE WORKER PROFILE
+// ------------------------------------------------------
+router.put("/update/:id", async (req, res) => {
+  try {
+    const workerId = req.params.id;
+
+    const updateData = {
+      fullName: req.body.fullName,
+      email: req.body.email,
+      age: req.body.age,
+      gender: req.body.gender,
+      skills: req.body.skills,
+      experience: req.body.experience,
+      availability: req.body.availability,
+      hourlyRate: req.body.hourlyRate,
+      profileImage: req.body.profileImage,
+
+      location: {
+        city: req.body.city,
+        state: req.body.state,
+        country: req.body.country,
+      },
+
+      profile: {
+        title: req.body.profileTitle,
+        bio: req.body.profileBio,
+        skills: req.body.profileSkills || [],
+      },
+    };
+
+    const updatedWorker = await Worker.findByIdAndUpdate(
+      workerId,
+      updateData,
+      { new: true } // return updated document
+    );
+
+    if (!updatedWorker) {
+      return res.status(404).json({ message: "Worker not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      worker: updatedWorker,
+    });
+
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+//===================================
+// 4. SEARCH WORKERS BY SKILL
+//===================================
+
+// GET /api/workers?skill=Driver
+router.get("/search", async (req, res) => {
+  try {
+    const skill = req.query.skill;
+    if (!skill) return res.status(400).json({ message: "Skill is required" });
+
+    const regex = new RegExp(skill, "i"); // case-insensitive search
+
+    const workers = await Worker.find({
+      $or: [
+        { skills: { $regex: regex } },
+        { "profile.skills": { $regex: regex } },
+      ],
+      isActive: true,
+    });
+
+    res.json(workers);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// =======================================================
+// GET WORKER BY ID (Profile Page)
+// =======================================================
+router.get("/details/:id", async (req, res) => {
+  try {
+    const workerId = req.params.id;
+
+    const worker = await Worker.findById(workerId);
+
+    if (!worker) {
+      return res.status(404).json({ message: "Worker not found" });
+    }
+
+    res.json(worker);
+  } catch (err) {
+    console.error("Get Worker Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
+

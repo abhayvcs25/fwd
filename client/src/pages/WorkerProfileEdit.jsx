@@ -1,10 +1,14 @@
 import { useState ,useEffect} from 'react';
 import { useNavigate } from "react-router-dom";
-
+//================================================================================================
 export default function WorkerProfileEdit() {
   const [activeNav, setActiveNav] = useState('Edit Profile');
   const navigate = useNavigate();
+  const workerId = localStorage.getItem("workerId");
 
+if (!workerId) {
+  console.error("No worker ID found in localStorage");
+}
    // Track all fields including location fields
 
   const [formData, setFormData] = useState({
@@ -27,8 +31,8 @@ export default function WorkerProfileEdit() {
 useEffect(() => {
   const workerId = localStorage.getItem("workerId");
   if (!workerId) return;
-
-  fetch(`http://localhost:5000/api/workers/me?id=${workerId}`)
+  console.log(workerId);
+  fetch(`http://localhost:5000/workers/me?id=${workerId}`)
     .then((res) => res.json())
     .then((data) => {
       setFormData({
@@ -62,24 +66,38 @@ const handleInputChange = (e) => {
     [name]: value,
   }));
 };
+const handleLogout = () => {
+      // you can clear tokens here if needed
+      navigate("/");
+    };
 
 // Save / submit function
 const handleSave = async () => {
   try {
-    const response = await fetch("http://localhost:5000/api/workers/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),   // <--- send raw values
-    });
+    console.log("Updating worker ID:", workerId);
+    const response = await fetch(
+      `http://localhost:5000/workers/update/${workerId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    }
 
     const data = await response.json();
     console.log("Profile data saved:", data);
-
     alert("Profile updated successfully!");
   } catch (err) {
     console.error("Error saving profile:", err);
   }
 };
+
+
 
 
   const navItems = [
@@ -122,7 +140,7 @@ const handleSave = async () => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <button className="w-[90%] mx-auto block bg-[#FFC107] text-white font-bold px-4 py-3 rounded-lg text-center shadow hover:opacity-90 transition mb-4">
+          <button onClick={handleLogout} className="w-[90%] mx-auto block bg-[#FFC107] text-white font-bold px-4 py-3 rounded-lg text-center shadow hover:opacity-90 transition mb-4">
             Logout
           </button>
         </div>

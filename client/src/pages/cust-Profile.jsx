@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { useNavigate, Link } from "react-router-dom";
 import { Home,Menu, Heart, MessageSquare, User, HelpCircle, LogOut, Bell, X, Search,  Edit2, Eye, EyeOff } from 'lucide-react';
 
@@ -6,7 +6,8 @@ export default function UserProfile() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  
+  const workerId = localStorage.getItem("workerId");
 const navigate = useNavigate(); 
 const handleLogout = () => {
     // you can clear tokens here if needed
@@ -16,25 +17,106 @@ const handleLogout = () => {
     navigate("/search"); // <-- change to your search page route
   };
   const [userData, setUserData] = useState({
-    fullName: 'Abhay Pawar',
-    email: 'abhay.pawar@skillmatch.com',
-    password: 'SecurePass123!',
-    company: 'Tech Solutions Inc.',
-    phoneNumber: '+91 98765 43210',
-    location: 'Mumbai, India',
-  });
+  fullName: '',
+  email: '',
+  password: '', // optional, can leave empty
+  company: '',
+  phoneNumber: '',
+  location: ''
+});
 
-  const [editData, setEditData] = useState(userData);
+const [editData, setEditData] = useState(userData);
+const token = localStorage.getItem('token'); // your JWT
+
+useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      // Get ID from localStorage (or wherever you saved it)
+      const customerId = localStorage.getItem("customerId");
+      console.log("Fetched customer ID:", customerId);
+
+      if (!customerId) {
+        console.error("No customer ID found");
+        return;
+      }
+
+      const res = await fetch(`http://localhost:5000/api/users/me?id=${customerId}`);
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+
+      const data = await res.json();
+console.log("Login response:", data);
+
+      // Map backend data to your state keys
+      const formattedData = {
+        fullName: data.fullName || '',
+        email: data.email || '',
+        password: '', // Never fetch password
+        company: data.companyName || '',
+        phoneNumber: data.phone || '',
+        location: data.location || ''
+      };
+
+      setUserData(formattedData);
+      setEditData(formattedData);
+
+    } catch (err) {
+      console.error("Failed to fetch user data:", err);
+    }
+  };
+
+  fetchUser();
+}, []);
+
+
 
   const handleEdit = () => {
     setIsEditing(true);
     setEditData(userData);
   };
+const handleSave = async () => {
+  try {
+    const userId = localStorage.getItem("customerId"); // ⬅ Get ID stored at login
 
-  const handleSave = () => {
+    if (!userId) {
+      alert("User ID not found in localStorage!");
+      return;
+    }
+    console.log("Saving profile for user ID:", userId);
+    const res = await fetch(`http://localhost:5000/api/users/update/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        fullName: editData.fullName,
+        email: editData.email,
+        companyName: editData.company,
+        phone: editData.phoneNumber,
+        location: editData.location
+      })
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
+    const data = await res.json();
+
     setUserData(editData);
     setIsEditing(false);
-  };
+    alert("Profile updated successfully!");
+  } catch (err) {
+    console.error("Error saving profile:", err);
+    alert("Failed to update profile.");
+  }
+};
+
+
 
   const handleCancel = () => {
     setIsEditing(false);

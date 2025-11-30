@@ -1,109 +1,41 @@
+import { useNavigate, useLocation ,Link} from "react-router-dom";
 
-import { useNavigate, Link } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
 import { Home, Menu, Heart, MessageSquare, User, X, HelpCircle, LogOut, Search, Bell, Star } from "lucide-react"
+
 export default function WorkersSearch() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate(); 
-  const handleLogout = () => {
-      // you can clear tokens here if needed
-      navigate("/");
-    };
-     const handleSearchClick = () => {
-    navigate("/search"); // <-- change to your search page route
-  };
-   const handleProfileClick = () => {
-    navigate("/worker-detail/:id"); // <-- change to your search page route
-  };
-  const [workers, setWorkers] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      skills: ['Web Design', 'UI/UX', 'Figma'],
-      phone: '+1-234-567-8901',
-      image: '/professional-man-1.jpg',
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      skills: ['Logo Design', 'Branding'],
-      phone: '+1-234-567-8902',
-      image: '/professional-woman-1.jpg',
-    },
-    {
-      id: 3,
-      name: 'Mike Davis',
-      skills: ['Content Writing', 'Copywriting', 'SEO'],
-      phone: '+1-234-567-8903',
-      image: '/professional-man-2.png',
-    },
-    {
-      id: 4,
-      name: 'Emma Wilson',
-      skills: ['Social Media Marketing', 'Analytics'],
-      phone: '+1-234-567-8904',
-      image: '/professional-woman-2.png',
-    },
-    {
-      id: 5,
-      name: 'Alex Chen',
-      skills: ['Mobile App Dev', 'React Native', 'Backend'],
-      phone: '+1-234-567-8905',
-      image: '/professional-man-3.jpg',
-    },
-    {
-      id: 6,
-      name: 'Lisa Brown',
-      skills: ['Graphic Design', 'Illustration'],
-      phone: '+1-234-567-8906',
-      image: '/professional-woman-3.png',
-    },
-    {
-      id: 7,
-      name: 'David Martinez',
-      skills: ['Video Editing', 'Motion Graphics', 'Adobe Suite'],
-      phone: '+1-234-567-8907',
-      image: '/professional-man-4.jpg',
-    },
-    {
-      id: 8,
-      name: 'Jessica Lee',
-      skills: ['Photography', 'Photo Editing', 'Lightroom'],
-      phone: '+1-234-567-8908',
-      image: '/professional-woman-4.jpg',
-    },
-    {
-      id: 9,
-      name: 'Robert Taylor',
-      skills: ['Full Stack Dev', 'Database Design'],
-      phone: '+1-234-567-8909',
-      image: '/professional-man-5.jpg',
-    },
-  ]);
-
+  const [workers, setWorkers] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [favLoadingIds, setFavLoadingIds] = useState({});
 
-  // load favorites for logged in user (only if authenticated)
-  useEffect(() => {
-    const initFavs = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      try {
-        const res = await fetch('http://localhost:5000/favorite/list', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setFavorites(Array.isArray(data.favorites) ? data.favorites : []);
-      } catch (err) {
-        console.error('Failed to load favorites', err);
-      }
-    };
+  const navigate = useNavigate(); 
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const skill = query.get("skill"); // get skill from URL
 
-    initFavs();
-  }, []);
+  useEffect(() => {
+    if (!skill) return; // no skill selected
+
+    console.log("Fetching workers with skill:", skill);
+    fetch(`http://localhost:5000/workers/search?skill=${skill}`)
+      .then(res => res.json())
+       .then(data => {
+      console.log("Fetched Workers:", data);  // 🔥 SHOW ALL DATA HERE
+      setWorkers(data);
+    })
+      .catch(err => console.error(err));
+  }, [skill]);
+
+  const handleLogout = () => navigate("/");
+  const handleSearchClick = () => navigate("/search");
+  const handleProfileClick = (id) => {
+  navigate(`/worker-detail/${id}`);
+};
+
+
+  // load favorites for logged in user (only if authenticated)
 
   const containerStyle = {
     display: 'flex',
@@ -291,7 +223,7 @@ export default function WorkersSearch() {
 
   const phoneStyle = {
     fontSize: '12px',
-    color: '#007BFF',
+    color: '#666',
     fontWeight: '600',
     marginBottom: '12px',
   };
@@ -405,22 +337,21 @@ export default function WorkersSearch() {
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <div style={searchContainerStyle}>
-              <Search size={18} color="#666" />
-              <input
-                type="text"
-                placeholder="Search services, workers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  border: 'none',
-                  background: 'none',
-                  outline: 'none',
-                  flex: 1,
-                  fontSize: '14px',
-                }}
-              />
-            </div>
+
+            <div style={searchContainerStyle} onClick={handleSearchClick}>
+                          <Search size={18} color="#666" />
+                          <input
+                            type="text"
+                            placeholder="Search services, workers..."
+                            style={{
+                              border: 'none',
+                              background: 'none',
+                              outline: 'none',
+                              flex: 1,
+                              fontSize: '14px',
+                            }}
+                          />
+                        </div>
           </div>
 
           <div style={rightNavStyle}>
@@ -459,7 +390,7 @@ export default function WorkersSearch() {
               const isFav = favorites.some(f => String(f.workerId) === wid || (f.workerId && String(f.workerId._id || f.workerId) === wid));
               return (
               <div
-                key={worker.id}
+                key={worker._id}
                 style={cardStyle}
                 onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
@@ -519,34 +450,41 @@ export default function WorkersSearch() {
                 </div>
 
                 {/* Card Content */}
-                <div style={cardContentStyle}>
-                  <div style={workerNameStyle}>{worker.name}</div>
-                  
-                  <div style={skillsStyle}>
-                    {worker.skills.map((skill, idx) => (
-                      <div key={idx}>• {skill}</div>
-                    ))}
-                  </div>
+                <div key={worker._id} style={cardContentStyle}>
+  
+  <div style={workerNameStyle}>{worker.fullName}</div>
 
-                  <div style={phoneStyle}>{worker.phone}</div>
+  <div style={skillsStyle}>
+    {worker.skills?.map((skill) => (
+      <div key={skill}>• {skill}</div>
+    ))}
+  </div>
 
-                  <div style={buttonGroupStyle}>
-                    <button onClick={handleProfileClick}
-                      style={profileButtonStyle}
-                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, profileButtonHoverStyle)}
-                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, profileButtonStyle)}
-                    >
-                      Profile
-                    </button>
-                    <button
-                      style={contactButtonStyle}
-                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, contactButtonHoverStyle)}
-                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, contactButtonStyle)}
-                    >
-                      Contact
-                    </button>
-                  </div>
-                </div>
+  <div style={phoneStyle}>Gender : {worker.gender}</div>
+  <div style={phoneStyle}>HourlyRate : {worker.hourlyRate}</div>
+
+  <div style={buttonGroupStyle}>
+    <button
+      onClick={() => handleProfileClick(worker._id)}  
+      style={profileButtonStyle}
+      onMouseEnter={(e) => Object.assign(e.currentTarget.style, profileButtonHoverStyle)}
+      onMouseLeave={(e) => Object.assign(e.currentTarget.style, profileButtonStyle)}
+    >
+      Profile
+    </button>
+
+    <button
+      style={contactButtonStyle}
+      onMouseEnter={(e) => Object.assign(e.currentTarget.style, contactButtonHoverStyle)}
+      onMouseLeave={(e) => Object.assign(e.currentTarget.style, contactButtonStyle)}
+    >
+      Contact
+    </button>
+  </div>
+
+</div>
+
+
               </div>
             )})}
           </div>

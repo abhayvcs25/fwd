@@ -23,18 +23,18 @@ export default function SearchPage() {
   ]
 
   const services = [
-  { name: 'Electrician', bg: '#FFC107', path: '/workers-search' },
-  { name: 'Plumber', bg: '#007BFF', path: '/workers-search' },
-  { name: 'Barber', bg: '#FFC107', path: '/workers-search' },
-  { name: 'Domestic Helper', bg: '#007BFF', path: '/workers-search' },
-  { name: 'Painter', bg: '#FFC107', path: '/workers-search' },
-  { name: 'Carpenter', bg: '#007BFF', path: '/workers-search' },
-  { name: 'AC Mechanic', bg: '#FFC107', path: '/workers-search' },
-  { name: 'Gardener', bg: '#007BFF', path: '/workers-search' },
-  { name: 'Driver', bg: '#FFC107', path: '/workers-search' },
-  { name: 'Cook', bg: '#007BFF', path: '/workers-search' },
-  { name: 'Laundry', bg: '#FFC107', path: '/workers-search' },
-  { name: 'Technician', bg: '#007BFF', path: '/workers-search' },
+  { name: 'Electrician', bg: '#FFC107', path: '/workers-search?skill=Electrician' },
+  { name: 'Plumber', bg: '#007BFF', path: '/workers-search?skill=Plumber' },
+  { name: 'Barber', bg: '#FFC107', path: '/workers-search?skill=Barber' },
+  { name: 'Domestic Helper', bg: '#007BFF', path: '/workers-search?skill=Domestic Helper' },
+  { name: 'Painter', bg: '#FFC107', path: '/workers-search?skill=Painter' },
+  { name: 'Carpenter', bg: '#007BFF', path: '/workers-search?skill=Carpenter' },
+  { name: 'AC Mechanic', bg: '#FFC107', path: '/workers-search?skill=AC Mechanic' },
+  { name: 'Gardener', bg: '#007BFF', path: '/workers-search?skill=Gardener' },
+  { name: 'Driver', bg: '#FFC107', path: '/workers-search?skill=Driver' },
+  { name: 'Cook', bg: '#007BFF', path: '/workers-search?skill=Cook' },
+  { name: 'Laundry', bg: '#FFC107', path: '/workers-search?skill=Laundry' },
+  { name: 'Technician', bg: '#007BFF', path: '/workers-search?skill=Technician' },
 ];
 
   const popularSearches = [

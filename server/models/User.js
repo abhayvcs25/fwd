@@ -6,12 +6,7 @@ const CustomerSchema = new Schema({
   passwordHash: { type: String, required: true },
   phone: { type: String, default: null },
   companyName: { type: String, default: null },
-  location: {
-    city: { type: String },
-    state: { type: String },
-    country: { type: String },
-    coordinates: { type: [Number], index: '2dsphere', sparse: true } // optional geo
-  },
+  location:{ type: String ,default:null},
   profileImage: { type: String, default: null },
   role: { type: String, enum: ['customer','worker','admin'], default: 'customer' },
   isActive: { type: Boolean, default: true },

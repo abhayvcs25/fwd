@@ -52,6 +52,7 @@ export default function CustomerAuth() {
     } else {
       // Login successful
       localStorage.setItem('token', data.token);
+      localStorage.setItem("customerId", data.user._id);
       navigate('/customer-dashboard');
       setLoginData({ email: '', password: '' });
     }

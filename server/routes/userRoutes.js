@@ -4,6 +4,8 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const JWT_SECRET = process.env.JWT_SECRET || "secret123";
+
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
@@ -54,7 +56,6 @@ if (!isMatch) return res.status(400).json({ message: 'Invalid email or password'
       process.env.JWT_SECRET || 'secretkey',
       { expiresIn: '1h' }
     );
-
     // avoid returning password hash
     const safeUser = user.toObject();
     delete safeUser.passwordHash;
@@ -63,6 +64,75 @@ if (!isMatch) return res.status(400).json({ message: 'Invalid email or password'
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// -------------------------
+// 3. GET LOGGED-IN CUSTOMER DETAILS
+// -------------------------
+router.get('/me', async (req, res) => {
+  try {
+    const customerId = req.query.id;
+    if (!customerId) {
+      return res.status(400).json({ message: "Customer ID is required" });
+    }
+
+    const customer = await User.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    res.json({
+      fullName: customer.fullName,
+      email: customer.email,
+      companyName: customer.companyName,
+      phone: customer.phone,
+      location: customer.location,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// -------------------------
+// 4. UPDATE CUSTOMER PROFILE
+// -------------------------
+router.put('/update/:id', async (req, res) => {
+  try {
+    const customerId = req.params.id;
+
+    if (!customerId) {
+      return res.status(400).json({ message: "Customer ID is required" });
+    }
+
+    const updateData = {
+      fullName: req.body.fullName,
+      email: req.body.email,
+      companyName: req.body.companyName,
+      phone: req.body.phone,
+      location: req.body.location
+    };
+
+    const updatedCustomer = await User.findByIdAndUpdate(
+      customerId,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedCustomer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      customer: updatedCustomer
+    });
+
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

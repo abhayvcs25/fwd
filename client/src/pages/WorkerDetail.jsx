@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, } from 'react';
 import {Home, Heart, MessageSquare, User, HelpCircle, Menu, X, Search, Bell, LogOut, Star, Clock, DollarSign, Phone, Mail, MapPin, Calendar } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate ,useParams } from 'react-router-dom';
 
 export default function WorkerDetail() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+
 
   // initialize favorite state if user has this worker in favorites
   useEffect(() => {
@@ -42,25 +43,19 @@ export default function WorkerDetail() {
       navigate("/search"); // <-- change to your search page route
     };
 
-  const worker = {
-    id: 1,
-    name: 'John Smith',
-    title: 'Professional Web Designer',
-    skills: ['Web Design', 'UI/UX Design', 'Figma'],
-    phone: '+1-234-567-8901',
-    email: 'john.smith@skillmatch.com',
-    location: 'San Francisco, CA',
-    image: '/professional-man-1.jpg',
-    rating: 4.8,
-    reviews: 156,
-    price: '$75/hour',
-    experience: '8 years',
-    avgWaitingTime: '2-4 hours',
-    completedProjects: 287,
-    responseTime: '15 mins',
-    portfolio: 'johnsmith.design',
-    about: 'Expert web designer with 8 years of experience creating beautiful, user-friendly websites and applications. Specialized in modern design trends and responsive layouts.',
-  };
+   const { id } = useParams();
+  const [worker, setWorker] = useState(null);
+console.log("Worker ID from params: !", id);
+  useEffect(() => {
+    fetch(`http://localhost:5000/workers/details/${id}`)
+      .then(res => res.json())
+      .then(data => {setWorker(data)
+      console.log("Fetched Worker Data: ", data); })
+      .catch(err => console.error(err));
+  }, [id]);
+
+  if (!worker) return <div>Loading...</div>;
+
 
   const containerStyle = {
     display: 'flex',
@@ -453,7 +448,7 @@ export default function WorkerDetail() {
             {/* Right - Worker Details */}
             <div style={profileInfoStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={nameStyle}>{worker.name}</div>
+                <div style={nameStyle}>{worker.fullName}</div>
                 {/* Favorite toggle star */}
                 <div
                   role="button"
@@ -494,7 +489,7 @@ export default function WorkerDetail() {
                   <Star size={20} color={isFavorite ? '#FFC107' : '#999'} fill={isFavorite ? '#FFC107' : 'none'} />
                 </div>
               </div>
-              <div style={titleStyle}>{worker.title}</div>
+              <div style={titleStyle}>{worker.profile?.bio}</div>
 
               {/* Rating */}
               <div style={ratingContainerStyle}>
@@ -511,7 +506,7 @@ export default function WorkerDetail() {
                   ))}
                 </div>
                 <span style={{ fontWeight: '600', color: '#333' }}>{worker.rating}</span>
-                <span style={{ color: '#666' }}>({worker.reviews} reviews)</span>
+                <span style={{ color: '#666' }}>({worker.stats?.ratingAverage} reviews)</span>
               </div>
 
               {/* Info Rows */}
@@ -521,7 +516,7 @@ export default function WorkerDetail() {
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#999' }}>Hourly Rate</div>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{worker.price}</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>{worker.hourlyRate}</div>
                 </div>
               </div>
 
@@ -531,7 +526,7 @@ export default function WorkerDetail() {
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#999' }}>Avg Waiting Time</div>
-                  <div style={{ fontSize: '14px', color: '#333' }}>{worker.avgWaitingTime}</div>
+                  <div style={{ fontSize: '14px', color: '#333' }}>{worker.stats?.avgResponseTime}</div>
                 </div>
               </div>
 
@@ -561,7 +556,9 @@ export default function WorkerDetail() {
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', color: '#999' }}>Location</div>
-                  <div style={{ fontSize: '14px', color: '#333' }}>{worker.location}</div>
+                  <div style={{ fontSize: '14px', color: '#333' }}>{worker.location?.city}</div>
+                  <div style={{ fontSize: '14px', color: '#333' }}>{worker.location?.state}</div>
+                  <div style={{ fontSize: '14px', color: '#333' }}>{worker.location?.country}</div>
                 </div>
               </div>
 
@@ -590,7 +587,7 @@ export default function WorkerDetail() {
               {/* Stats */}
               <div style={statsContainerStyle}>
                 <div style={statCardStyle}>
-                  <div style={statNumberStyle}>{worker.completedProjects}</div>
+                  <div style={statNumberStyle}>{worker.stats.completedProjects}</div>
                   <div style={statLabelStyle}>Projects Completed</div>
                 </div>
                 <div style={statCardStyle}>
@@ -598,11 +595,11 @@ export default function WorkerDetail() {
                   <div style={statLabelStyle}>Experience</div>
                 </div>
                 <div style={statCardStyle}>
-                  <div style={statNumberStyle}>{worker.responseTime}</div>
+                  <div style={statNumberStyle}>{worker.stats.avgResponseTime}</div>
                   <div style={statLabelStyle}>Response Time</div>
                 </div>
                 <div style={statCardStyle}>
-                  <div style={statNumberStyle}>{worker.reviews}</div>
+                  <div style={statNumberStyle}>{worker.stats?.ratingCount}</div>
                   <div style={statLabelStyle}>Client Reviews</div>
                 </div>
               </div>
@@ -628,21 +625,7 @@ export default function WorkerDetail() {
           </div>
 
           {/* About Section */}
-          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={profileInfoStyle}>
-              <div style={aboutSectionStyle}>
-                <div style={aboutTitleStyle}>About</div>
-                <div style={aboutTextStyle}>
-                  {worker.about}
-                </div>
-                <div>
-                  <span style={{ fontSize: '12px', color: '#007BFF', fontWeight: '600', cursor: 'pointer' }}>
-                    Portfolio: {worker.portfolio} →
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>

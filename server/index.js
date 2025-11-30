@@ -10,9 +10,9 @@ const bookingsRoutes = require('./routes/bookingsRoutes.js');
 const reviewRoutes = require('./routes/reviewRoutes.js');
 const messagesRoutes = require('./routes/messagesRoutes.js');
 const transactionRoutes = require('./routes/transactionRoutes.js');
-const workersRoutes = require('./routes/workersRoutes.js');
 const requestsRoutes = require('./routes/requestsRoutes.js');
 const workerRoutes = require('./routes/workersRoutes.js');
+
 
 
 const app = express();
@@ -31,7 +31,6 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/workers', workersRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/workers', workerRoutes);
 
