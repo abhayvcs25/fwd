@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Worker = require('../models/Worker');
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret123";
 
@@ -133,6 +134,56 @@ router.put('/update/:id', async (req, res) => {
   } catch (err) {
     console.error("Update Error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+// -------------------------
+// 5. GET WORKER DETAILS BY ID
+// -------------------------
+router.get("/:id", async (req, res) => {
+  try {
+    const workerId = req.params.id;
+
+    const worker = await Worker.findById(workerId);
+
+    if (!worker) {
+      return res.status(404).json({ message: "Worker not found" });
+    }
+
+    res.json(worker);
+  } catch (err) {
+    console.error("Get Worker Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+router.put('/change-password/:id', async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ message: "New password is required" });
+    }
+
+    // Hash new password
+    const passwordHash1 = await bcrypt.hash(newPassword, 10);
+
+    // Update worker password
+    const result = await Worker.updateOne(
+      { _id: req.params.id },
+      { passwordHash: passwordHash1 }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Worker not found" });
+    }
+
+    res.json({
+      message: "Password updated successfully"
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

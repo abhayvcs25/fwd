@@ -100,11 +100,12 @@ const handleSave = async () => {
 
 
 
-  const navItems = [
+const navItems = [
     { id: 'dashboard', label: 'Dashboard' , path: "/worker-dashboard"},
     { id: 'messages', label: 'Messages' , path: "/worker-messages"},
     { id: 'reviews', label: 'Reviews' , path: "/worker-reviews"},
     { id: 'Edit Profile', label: 'Edit Profile' , path: "/worker-profile-edit"},
+    {id: 'pending-requests', label: 'Pending Requests' , path: "/pending-requests"}
   ];
 
   return (

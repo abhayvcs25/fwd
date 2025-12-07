@@ -131,13 +131,13 @@ export default function WorkerReviews() {
     },
   };
 
-  const navItems = [
+const navItems = [
     { id: 'dashboard', label: 'Dashboard' , path: "/worker-dashboard"},
     { id: 'messages', label: 'Messages' , path: "/worker-messages"},
     { id: 'reviews', label: 'Reviews' , path: "/worker-reviews"},
     { id: 'Edit Profile', label: 'Edit Profile' , path: "/worker-profile-edit"},
+    {id: 'pending-requests', label: 'Pending Requests' , path: "/pending-requests"}
   ];
-
   return (
     <div style={styles.container}>
       {/* Navbar */}
@@ -180,6 +180,16 @@ export default function WorkerReviews() {
 
       {/* MAIN CONTENT */}
       <div style={styles.mainContent}>
+      <nav className="fixed top-0 left-[230px] right-0 h-[70px] bg-white shadow-sm flex items-center justify-between px-6 z-40">
+        <div className="flex-1"></div>
+        <div className="flex items-center gap-6">
+          <button className="text-xl">🔔</button>
+          <div className="w-10 h-10 rounded-full bg-[#007BFF] text-white flex items-center justify-center font-bold">
+            JD
+          </div>
+        </div>
+      </nav>
+        
         <div style={styles.pageTitle}>⭐ Your Reviews</div>
         <div style={styles.pageSubtitle}>Manage and view all customer reviews</div>
 

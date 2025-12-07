@@ -407,48 +407,6 @@ export default function WorkersSearch() {
                   }}
                 />
 
-                {/* favorite star overlay */}
-                <div style={{ position: 'absolute', right: 12, top: 12 }}>
-                  <div
-                    role="button"
-                    aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      const token = localStorage.getItem('token');
-                      if (!token) return navigate('/customer-auth');
-                      if (favLoadingIds[wid]) return;
-                      setFavLoadingIds(prev => ({ ...prev, [wid]: true }));
-                      try {
-                        if (!isFav) {
-                          const res = await fetch('http://localhost:5000/favorite/add', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ workerId: worker.id })
-                          });
-                          if (!res.ok) throw new Error('Failed to add');
-                          const data = await res.json();
-                          setFavorites(prev => [...prev, data.favorite]);
-                        } else {
-                          const res = await fetch('http://localhost:5000/favorite/remove', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ workerId: worker.id })
-                          });
-                          if (!res.ok) throw new Error('Failed to remove');
-                          setFavorites(prev => prev.filter(f => !(String(f.workerId) === wid || (f.workerId && String(f.workerId._id || f.workerId) === wid))));
-                        }
-                      } catch (err) {
-                        console.error(err);
-                      } finally {
-                        setFavLoadingIds(prev => { const copy = { ...prev }; delete copy[wid]; return copy; });
-                      }
-                    }}
-                    style={{ background: 'rgba(255,255,255,0.95)', padding: 6, borderRadius: 999, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    <Star size={18} color={isFav ? '#FFC107' : '#999'} fill={isFav ? '#FFC107' : 'none'} />
-                  </div>
-                </div>
-
                 {/* Card Content */}
                 <div key={worker._id} style={cardContentStyle}>
   

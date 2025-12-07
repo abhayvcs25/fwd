@@ -18,6 +18,7 @@ import Favorites from './pages/Favorites'
 import WorkerReviews from './pages/WorkerReviews'
 import WorkersSearch from './pages/WorkersSearch'
 import WorkerDetail from './pages/WorkerDetail'
+import PendingRequests from './pages/PendingRequests.jsx'
 
 function App(){
   return (
@@ -37,6 +38,7 @@ function App(){
         <Route path="/worker-reviews" element={<WorkerReviews/>}/>
         <Route path="/workers-search" element={<WorkersSearch/>}/>
         <Route path="/worker-detail/:id" element={<WorkerDetail />} />
+        <Route path="/pending-requests" element={<PendingRequests/>}/>
         <Route path="/about" element={<About/>}/>
         <Route path="*" element={<NotFound/>}/>
       </Routes>

@@ -1,37 +1,72 @@
 
 import React, { useState, useEffect, } from 'react';
-import {Home, Heart, MessageSquare, User, HelpCircle, Menu, X, Search, Bell, LogOut, Star, Clock, DollarSign, Phone, Mail, MapPin, Calendar } from 'lucide-react';
+import {Home, Heart, MessageSquare, User, HelpCircle, Menu, X, Search, Bell, LogOut, Star, Clock, DollarSign, Phone, Mail, MapPin } from 'lucide-react';
 import { Link, useNavigate ,useParams } from 'react-router-dom';
 
 export default function WorkerDetail() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  // initialize favorite state if user has this worker in favorites
-  useEffect(() => {
-    const init = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return; // not logged in
 
-      try {
-        const res = await fetch('http://localhost:5000/favorite/list', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const favs = data.favorites || [];
-        // worker.id may be number/string; convert to string when possible
-        const found = favs.find(f => String(f.workerId) === String(worker.id) || (f.workerId && f.workerId._id && String(f.workerId._id) === String(worker.id)));
-        if (found) setIsFavorite(true);
-      } catch (err) {
-        console.error('Failed to load favorites', err);
+
+  
+  const [showForm, setShowForm] = useState(false);
+
+  const [formData, setFormData] = useState({
+    description: "",
+    location:"",
+    date: ""
+  });
+
+  // Handle input change
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleBooking = async () => {
+    if (!formData.description || !formData.date) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/bookings/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          workerId: id,
+          serviceName: formData.description,
+          location: formData.location,
+          scheduledAt: formData.date,
+          currency: "INR"
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Booking failed");
+        return;
       }
-    };
 
-    init();
-  }, []);
+      alert("Booking Created!");
+      setShowForm(false);
+      setFormData({ description: "", date: "" });
+
+    } catch (err) {
+      console.error(err);
+      alert("Error creating booking");
+    }
+  };
+
+
   const navigate = useNavigate();
   
     const handleLogout = () => {
@@ -52,9 +87,24 @@ console.log("Worker ID from params: !", id);
       .then(data => {setWorker(data)
       console.log("Fetched Worker Data: ", data); })
       .catch(err => console.error(err));
+
+      const token = localStorage.getItem('token');
+  if (!token) return;
+
+  fetch('http://localhost:5000/favorite', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.favoriteWorkerIds.includes(id)) {
+        setIsFavorite(true); // mark as already favorited
+      }
+    })
+    .catch(console.error);
   }, [id]);
 
   if (!worker) return <div>Loading...</div>;
+// fetch favorite workers once
 
 
   const containerStyle = {
@@ -303,6 +353,9 @@ console.log("Worker ID from params: !", id);
     padding: '12px 24px',
     backgroundColor: '#007BFF',
     color: '#fff',
+    maxHeight: '66px',
+    justifyContent: 'center',
+    alignItems: 'center',
     border: 'none',
     borderRadius: '8px',
     fontSize: '14px',
@@ -320,6 +373,8 @@ console.log("Worker ID from params: !", id);
     flex: 1,
     padding: '12px 24px',
     backgroundColor: '#FFC107',
+    height: '100%',
+    maxHeight: '66px',
     color: '#333',
     border: 'none',
     borderRadius: '8px',
@@ -464,7 +519,7 @@ console.log("Worker ID from params: !", id);
                         const res = await fetch('http://localhost:5000/favorite/add', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                          body: JSON.stringify({ workerId: worker.id })
+                          body: JSON.stringify({ workerId:id })
                         });
                         if (!res.ok) throw new Error('Failed to add favorite');
                         setIsFavorite(true);
@@ -472,7 +527,7 @@ console.log("Worker ID from params: !", id);
                         const res = await fetch('http://localhost:5000/favorite/remove', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                          body: JSON.stringify({ workerId: worker.id })
+                          body: JSON.stringify({ workerId:id })
                         });
                         if (!res.ok) throw new Error('Failed to remove favorite');
                         setIsFavorite(false);
@@ -614,6 +669,7 @@ console.log("Worker ID from params: !", id);
                   Send Message
                 </button>
                 <button
+                  onClick={() => setShowForm(true)}
                   style={bookButtonStyle}
                   onMouseEnter={(e) => Object.assign(e.currentTarget.style, bookButtonHoverStyle)}
                   onMouseLeave={(e) => Object.assign(e.currentTarget.style, bookButtonStyle)}
@@ -621,6 +677,89 @@ console.log("Worker ID from params: !", id);
                   Book Now
                 </button>
               </div>
+                {/* POPUP FORM */}
+                {showForm && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      padding: "20px",
+                      border: "1px solid #ccc",
+                      borderRadius: "10px",
+                      width: "100%",
+                    }}
+                  >
+                    <h3>Book This Worker</h3>
+
+                    <input
+                      type="text"
+                      name="description"
+                      placeholder="Job Description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        marginBottom: "12px",
+                        borderRadius: "5px"
+                      }}
+                    />
+                    <input
+                      type="text"
+                      name="location"
+                      placeholder="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        marginBottom: "12px",
+                        borderRadius: "5px"
+                      }}
+                    />
+
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleChange}
+                      style={{
+                        width: "100%",
+                        padding: "8px",
+                        marginBottom: "12px",
+                        borderRadius: "5px"
+                      }}
+                    />
+
+                    <button
+                      onClick={handleBooking}
+                      style={{
+                        padding: "10px",
+                        width: "100%",
+                        backgroundColor: "green",
+                        color: "white",
+                        borderRadius: "5px",
+                        border: "none",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Confirm Booking
+                    </button>
+
+                    <button
+                      onClick={() => setShowForm(false)}
+                      style={{
+                        marginTop: "10px",
+                        padding: "8px",
+                        width: "100%",
+                        backgroundColor: "#ccc",
+                        borderRadius: "5px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
 

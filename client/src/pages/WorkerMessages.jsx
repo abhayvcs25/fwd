@@ -194,7 +194,7 @@ export default function WorkerMessages() {
   const messagesContainerStyle = {
     display: 'flex',
     flex: 1,
-    overflow: 'hidden',
+    marginTop: '70px',
   };
 
   const chatListStyle = {
@@ -324,11 +324,12 @@ export default function WorkerMessages() {
     transition: 'all 0.2s ease',
   };
 
-     const navItems = [
+   const navItems = [
     { id: 'dashboard', label: 'Dashboard' , path: "/worker-dashboard"},
     { id: 'messages', label: 'Messages' , path: "/worker-messages"},
     { id: 'reviews', label: 'Reviews' , path: "/worker-reviews"},
     { id: 'Edit Profile', label: 'Edit Profile' , path: "/worker-profile-edit"},
+    {id: 'pending-requests', label: 'Pending Requests' , path: "/pending-requests"}
   ];
 
   return (
@@ -377,51 +378,15 @@ export default function WorkerMessages() {
       {/* Main Content */}
       <div style={mainContentStyle}>
         {/* Top Navbar */}
-        <div style={navbarStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '20px',
-                color: '#333',
-              }}
-            >
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <div style={searchContainerStyle}>
-              <Search size={18} color="#666" />
-              <input
-                type="text"
-                placeholder="Search services, workers..."
-                style={{
-                  border: 'none',
-                  background: 'none',
-                  outline: 'none',
-                  flex: 1,
-                  fontSize: '14px',
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={rightNavStyle}>
-            <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
-            <div style={userProfileStyle}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                  Abhay Pawar
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  abhay.pawar@skillmatch.com
-                </div>
-              </div>
-              <div style={avatarStyle}>AP</div>
-            </div>
+        <nav className="fixed top-0 left-[230px] right-0 h-[70px] bg-white shadow-sm flex items-center justify-between px-6 z-40">
+        <div className="flex-1"></div>
+        <div className="flex items-center gap-6">
+          <button className="text-xl">🔔</button>
+          <div className="w-10 h-10 rounded-full bg-[#007BFF] text-white flex items-center justify-center font-bold">
+            JD
           </div>
         </div>
+      </nav>
 
         {/* Messages Area */}
         <div style={messagesContainerStyle}>

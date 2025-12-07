@@ -104,8 +104,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
+    // IMPORTANT FIX: use userId instead of id
     const token = jwt.sign(
-      { id: worker._id, role: worker.role },
+      { userId: worker._id, role: worker.role },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -125,6 +126,7 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // ------------------------------------------------------
 // 3. GET WORKER AGGREGATED DETAILS (Dashboard)
