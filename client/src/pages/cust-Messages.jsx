@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Home,Menu, Heart, MessageSquare, User, HelpCircle, LogOut, Bell, X, Search, Send } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Messages() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -9,80 +10,234 @@ export default function Messages() {
   const navigate = useNavigate(); 
   const handleLogout = () => {
       // you can clear tokens here if needed
+      localStorage.removeItem("token");
+      localStorage.removeItem("customerId");
+      localStorage.removeItem("fullName");
+    localStorage.removeItem("email");
       navigate("/");
     };
     const handleSearchClick = () => {
     navigate("/search"); // <-- change to your search page route
   };
-  const [chats, setChats] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      avatar: 'JS',
-      lastMessage: 'Thanks for your help!',
-      time: '2h ago',
-      unread: 2,
-      messages: [
-        { id: 1, sender: 'John Smith', text: 'Hi, I need your help with the project', time: '10:30 AM', isOwn: false },
-        { id: 2, sender: 'You', text: 'Sure, what do you need?', time: '10:32 AM', isOwn: true },
-        { id: 3, sender: 'John Smith', text: 'Thanks for your help!', time: '10:35 AM', isOwn: false },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      avatar: 'SJ',
-      lastMessage: 'Let me know about the schedule',
-      time: '4h ago',
-      unread: 1,
-      messages: [
-        { id: 1, sender: 'Sarah Johnson', text: 'Are you available next week?', time: '9:00 AM', isOwn: false },
-        { id: 2, sender: 'You', text: 'Yes, I am available', time: '9:05 AM', isOwn: true },
-        { id: 3, sender: 'Sarah Johnson', text: 'Let me know about the schedule', time: '9:10 AM', isOwn: false },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Mike Davis',
-      avatar: 'MD',
-      lastMessage: 'Looking forward to it',
-      time: '1d ago',
-      unread: 0,
-      messages: [
-        { id: 1, sender: 'Mike Davis', text: 'Can we reschedule?', time: 'yesterday', isOwn: false },
-        { id: 2, sender: 'You', text: 'Sure, what time works for you?', time: 'yesterday', isOwn: true },
-        { id: 3, sender: 'Mike Davis', text: 'Looking forward to it', time: 'yesterday', isOwn: false },
-      ],
-    },
-    {
-      id: 4,
-      name: 'Emma Wilson',
-      avatar: 'EW',
-      lastMessage: 'Perfect! See you then',
-      time: '2d ago',
-      unread: 0,
-      messages: [
-        { id: 1, sender: 'Emma Wilson', text: 'Is the booking confirmed?', time: '2 days ago', isOwn: false },
-        { id: 2, sender: 'You', text: 'Yes, all set', time: '2 days ago', isOwn: true },
-        { id: 3, sender: 'Emma Wilson', text: 'Perfect! See you then', time: '2 days ago', isOwn: false },
-      ],
-    },
-  ]);
 
-  const handleSendMessage = () => {
-    if (messageInput.trim()) {
-      const updatedChats = [...chats];
-      updatedChats[selectedChat].messages.push({
-        id: updatedChats[selectedChat].messages.length + 1,
-        sender: 'You',
-        text: messageInput,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isOwn: true,
-      });
-      setChats(updatedChats);
-      setMessageInput('');
+  const [chats, setChats] = useState([]);
+  const [chatData, setChatData] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [searchParams] = useSearchParams();
+  const [user, setUser] = useState({
+  name: "Guest User",
+  email: "user@example.com",
+});
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUserId(decoded.userId);
+        fetchConversations(decoded.userId);
+        setUser({
+      name: decoded.fullName || decoded.name || "Guest User",
+      email: decoded.email || "user@example.com",
+    });
+      } catch (error) {
+        console.error('Invalid token');
+      }
+    }
+  }, []);
+  
+
+  const fetchConversations = async (userId) => {
+    try {
+    const res = await fetch(
+      'http://localhost:5000/api/messages/conversations',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch conversations');
+    }
+
+    const data = await res.json();
+
+    const mappedChats = (data.conversations || []).map(conv => ({
+      id: conv._id,
+      name: conv.otherUser?.fullName || 'Unn',
+      avatar: conv.otherUser?.fullName?.[0] || 'U',
+      lastMessage: conv.lastMessage || 'No messages yet',
+      time: conv.lastMessageTime
+        ? new Date(conv.lastMessageTime).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : '',
+      unread: conv.unreadCount || 0,
+      otherUserId: conv.otherUser?._id,
+      otherUserRole: conv.otherUser?.role
+    }));
+
+    setChats(mappedChats);
+    console.log('Mapped Chats:', mappedChats);
+
+      const workerId = searchParams.get('workerId');
+      if (workerId) {
+        const chatIndex = data.conversations.findIndex(conv => conv.otherUser?._id === workerId);
+        if (chatIndex !== -1) {
+          setSelectedChat(chatIndex);
+          openChat(data.conversations[chatIndex]._id, data.conversations[chatIndex].otherUser);
+        } else {
+          // Create conversation
+          const res2 = await fetch('http://localhost:5000/api/messages/conversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+              otherUserId: workerId,
+              otherUserRole: 'worker'
+            })
+          });
+          const data2 = await res2.json();
+          const newChat = {
+            id: data2.conversation._id,
+            name: 'Worker',
+            avatar: 'W',
+            lastMessage: '',
+            time: '',
+            unread: 0,
+            otherUserId: workerId,
+            otherUserRole: 'worker'
+          };
+          const updatedChats = [...mappedChats, newChat];
+          setChats(updatedChats);
+          setSelectedChat(updatedChats.length - 1);
+          openChat(data2.conversation._id, { _id: workerId, fullName: 'Worker', role: 'worker' });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
     }
   };
+
+const getMessages = async (conversationId, otherUser) => {
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/messages/conversation/${conversationId}`
+    );
+    const data = await res.json();
+
+    // Format messages
+    const formattedMessages = data.messages.map((msg) => ({
+      id: msg._id,
+      sender: msg.senderId === otherUser.id ? otherUser.name : "You",
+      text: msg.text,
+      time: new Date(msg.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isOwn: msg.senderId !== otherUser.id,
+    }));
+
+    // Prepare final structure
+    const chatObject = {
+      id: otherUser.id,
+      name: otherUser.name,
+      avatar: otherUser.avatar || otherUser.name[0],
+      lastMessage:
+        formattedMessages.length > 0
+          ? formattedMessages[formattedMessages.length - 1].text
+          : "",
+      time:
+        formattedMessages.length > 0
+          ? formattedMessages[formattedMessages.length - 1].time
+          : "",
+      unread: data.unread || 0,
+      messages: formattedMessages,
+    };
+
+    setChatData(chatObject);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+  }
+};
+
+const openChat = (conversationId, user) => {
+  getMessages(conversationId, {
+    id: user._id,
+    name: user.fullName,
+    avatar: user.fullName[0],
+  });
+};
+
+
+
+const handleSendMessage = async () => {
+  if (!messageInput.trim() || !userId || !chatData) return;
+
+  const receiverId = chatData.id;
+  const receiverType = chats[selectedChat]?.otherUserRole || 'worker';
+
+  try {
+    const res = await fetch("http://localhost:5000/api/messages/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({
+        senderId: userId,
+        senderType: 'customer',
+        receiverId,
+        senderfullName:user.fullName,
+        receiverType,
+        text: messageInput,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Message send failed");
+
+    const { message: savedMessage } = await res.json();
+
+    const newMsg = {
+      id: savedMessage._id,
+      sender: "You",
+      text: savedMessage.text,
+      time: new Date(savedMessage.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isOwn: true,
+    };
+
+    // Update active chat messages
+    setChatData(prev => ({
+      ...prev,
+      messages: [...prev.messages, newMsg],
+      lastMessage: savedMessage.text,
+      time: newMsg.time,
+    }));
+
+    // Update chat list preview
+    setChats(prev =>
+      prev.map((chat, idx) =>
+        idx === selectedChat
+          ? { ...chat, lastMessage: savedMessage.text, time: newMsg.time }
+          : chat
+      )
+    );
+
+    setMessageInput("");
+  } catch (error) {
+    console.error("Error sending message:", error);
+  }
+};
+
+
 
   const containerStyle = {
     display: 'flex',
@@ -379,104 +534,120 @@ export default function Messages() {
       {/* Main Content */}
       <div style={mainContentStyle}>
         {/* Top Navbar */}
-        <div style={navbarStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '20px',
-                color: '#333',
-              }}
-            >
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <div style={searchContainerStyle} onClick={handleSearchClick}>
-              <Search size={18} color="#666" />
-              <input
-                type="text"
-                placeholder="Search services, workers..."
+          <div style={navbarStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
                 style={{
-                  border: 'none',
-                  background: 'none',
-                  outline: 'none',
-                  flex: 1,
-                  fontSize: '14px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '20px',
+            color: '#333',
                 }}
-              />
+              >
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+              <div style={searchContainerStyle} onClick={handleSearchClick}>
+                <Search size={18} color="#666" />
+                <input
+            type="text"
+            placeholder="Search services, workers..."
+            style={{
+              border: 'none',
+              background: 'none',
+              outline: 'none',
+              flex: 1,
+              fontSize: '14px',
+            }}
+                />
+              </div>
             </div>
-          </div>
 
-          <div style={rightNavStyle}>
-            <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
-            <div style={userProfileStyle}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                  Abhay Pawar
+            <div style={rightNavStyle}>
+              <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
+              <div style={userProfileStyle}>
+                <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+              { localStorage.getItem("fullName") || "Guest User"}
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {localStorage.getItem("email") || "user@example.com"}
+            </div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  abhay.pawar@skillmatch.com
+                <div style={avatarStyle}>
+            {(localStorage.getItem("fullName") || "G")
+              .split(' ')
+              .map(word => word[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2)}
                 </div>
               </div>
-              <div style={avatarStyle}>AP</div>
             </div>
           </div>
-        </div>
 
-        {/* Messages Area */}
+          {/* Messages Area */}
         <div style={messagesContainerStyle}>
           {/* Chat List */}
           <div style={chatListStyle}>
             <div style={{ padding: '15px', borderBottom: '1px solid #e0e0e0', fontWeight: '600', color: '#333' }}>
               Messages
             </div>
-            {chats.map((chat, index) => (
-              <div
-                key={chat.id}
-                style={chatItemStyle(selectedChat === index)}
-                onClick={() => setSelectedChat(index)}
-                onMouseEnter={(e) => {
-                  if (selectedChat !== index) {
-                    e.currentTarget.style.backgroundColor = '#f9f9f9';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedChat !== index) {
-                    e.currentTarget.style.backgroundColor = '#ffffff';
-                  }
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      backgroundColor: '#007BFF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      fontSize: '14px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {chat.avatar}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                      <div style={chatNameStyle}>{chat.name}</div>
-                      {chat.unread > 0 && <div style={unreadBadgeStyle}>{chat.unread}</div>}
+            {chats.length > 0 ? (
+              chats.map((chat, index) => (
+                <div
+                  key={chat.id}
+                  style={chatItemStyle(selectedChat === index)}
+                  onClick={() => {
+                    setSelectedChat(index);
+                    openChat(chat.id, { _id: chat.otherUserId, fullName: chat.name, role: chat.otherUserRole });
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedChat !== index) {
+                      e.currentTarget.style.backgroundColor = '#f9f9f9';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedChat !== index) {
+                      e.currentTarget.style.backgroundColor = '#ffffff';
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: '#007BFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {chat.avatar}
                     </div>
-                    <div style={chatMessageStyle}>{chat.lastMessage}</div>
-                    <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>{chat.time}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <div style={chatNameStyle}>{chat.name}</div>
+                        {chat.unread > 0 && <div style={unreadBadgeStyle}>{chat.unread}</div>}
+                      </div>
+                      <div style={chatMessageStyle}>{chat.lastMessage}</div>
+                      <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>{chat.time}</div>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
+                No conversations yet. Start chatting with workers!
               </div>
-            ))}
+            )}
           </div>
 
           {/* Chat Window */}
@@ -497,11 +668,11 @@ export default function Messages() {
                   fontSize: '14px',
                 }}
               >
-                {chats[selectedChat].avatar}
+                {chatData?.avatar || 'U'}
               </div>
               <div>
                 <div style={{ fontWeight: '600', color: '#333', fontSize: '15px' }}>
-                  {chats[selectedChat].name}
+                  {chatData?.name || 'Select a chat'}
                 </div>
                 <div style={{ fontSize: '12px', color: '#666' }}>Active now</div>
               </div>
@@ -509,14 +680,20 @@ export default function Messages() {
 
             {/* Messages */}
             <div style={messagesAreaStyle}>
-              {chats[selectedChat].messages.map((msg) => (
-                <div key={msg.id}>
-                  <div style={messageStyle(msg.isOwn)}>
-                    <div style={messageBubbleStyle(msg.isOwn)}>{msg.text}</div>
+              {chatData?.messages?.length > 0 ? (
+                chatData.messages.map((msg) => (
+                  <div key={msg.id}>
+                    <div style={messageStyle(msg.isOwn)}>
+                      <div style={messageBubbleStyle(msg.isOwn)}>{msg.text}</div>
+                    </div>
+                    <div style={messageTimeStyle}>{msg.time}</div>
                   </div>
-                  <div style={messageTimeStyle}>{msg.time}</div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', color: '#666', fontSize: '14px', marginTop: '20px' }}>
+                  No messages yet. Start the conversation!
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Input Area */}
@@ -530,20 +707,26 @@ export default function Messages() {
                     handleSendMessage();
                   }
                 }}
-                placeholder="Type your message..."
+                placeholder={chatData ? "Type your message..." : "Select a chat to start messaging"}
                 style={inputFieldStyle}
+                disabled={!chatData}
               />
               <button
                 onClick={handleSendMessage}
                 style={sendButtonStyle}
+                disabled={!chatData || !messageInput.trim()}
                 onMouseEnter={(e) => {
-                  Object.assign(e.currentTarget.style, {
-                    ...sendButtonStyle,
-                    backgroundColor: '#0056b3',
-                  });
+                  if (chatData && messageInput.trim()) {
+                    Object.assign(e.currentTarget.style, {
+                      ...sendButtonStyle,
+                      backgroundColor: '#0056b3',
+                    });
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  Object.assign(e.currentTarget.style, sendButtonStyle);
+                  if (chatData && messageInput.trim()) {
+                    Object.assign(e.currentTarget.style, sendButtonStyle);
+                  }
                 }}
               >
                 <Send size={18} />

@@ -28,7 +28,16 @@ export default function WorkersSearch() {
       .catch(err => console.error(err));
   }, [skill]);
 
-  const handleLogout = () => navigate("/");
+  const handleLogout = () => {
+      // you can clear tokens here if needed
+      
+    localStorage.removeItem("token");
+    localStorage.removeItem("customerId");
+    localStorage.removeItem("fullName");
+    localStorage.removeItem("email");
+      navigate("/");
+    };
+
   const handleSearchClick = () => navigate("/search");
   const handleProfileClick = (id) => {
   navigate(`/worker-detail/${id}`);
@@ -324,51 +333,57 @@ export default function WorkersSearch() {
       <div style={mainContentStyle}>
         {/* Top Navbar */}
         <div style={navbarStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '20px',
-                color: '#333',
-              }}
-            >
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '20px',
+            color: '#333',
+                }}
+              >
+                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+              <div style={searchContainerStyle} onClick={handleSearchClick}>
+                <Search size={18} color="#666" />
+                <input
+            type="text"
+            placeholder="Search services, workers..."
+            style={{
+              border: 'none',
+              background: 'none',
+              outline: 'none',
+              flex: 1,
+              fontSize: '14px',
+            }}
+                />
+              </div>
+            </div>
 
-            <div style={searchContainerStyle} onClick={handleSearchClick}>
-                          <Search size={18} color="#666" />
-                          <input
-                            type="text"
-                            placeholder="Search services, workers..."
-                            style={{
-                              border: 'none',
-                              background: 'none',
-                              outline: 'none',
-                              flex: 1,
-                              fontSize: '14px',
-                            }}
-                          />
-                        </div>
-          </div>
-
-          <div style={rightNavStyle}>
-            <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
-            <div style={userProfileStyle}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                  Abhay Pawar
+            <div style={rightNavStyle}>
+              <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
+              <div style={userProfileStyle}>
+                <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+              { localStorage.getItem("fullName") || "Guest User"}
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {localStorage.getItem("email") || "user@example.com"}
+            </div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  abhay.pawar@skillmatch.com
+                <div style={avatarStyle}>
+            {(localStorage.getItem("fullName") || "G")
+              .split(' ')
+              .map(word => word[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2)}
                 </div>
               </div>
-              <div style={avatarStyle}>AP</div>
             </div>
           </div>
-        </div>
 
         {/* Content Area */}
         <div style={contentAreaStyle}>

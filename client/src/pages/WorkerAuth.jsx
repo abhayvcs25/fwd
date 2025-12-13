@@ -76,6 +76,8 @@ export default function WorkerAuth() {
     // Save token for authenticated routes
     localStorage.setItem("token", data.token);
     localStorage.setItem("workerId", data.worker.id);
+    localStorage.setItem("fullName", data.worker.fullName);
+    localStorage.setItem("email", data.worker.email);
 
     navigate("/worker-dashboard");
 

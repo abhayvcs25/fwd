@@ -53,6 +53,8 @@ export default function CustomerAuth() {
       // Login successful
       localStorage.setItem('token', data.token);
       localStorage.setItem("customerId", data.user._id);
+      localStorage.setItem("fullName", data.user.fullName);
+      localStorage.setItem("email", data.user.email);
       navigate('/customer-dashboard');
       setLoginData({ email: '', password: '' });
     }

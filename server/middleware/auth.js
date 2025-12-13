@@ -11,9 +11,14 @@ module.exports = async function auth(req, res, next) {
     if (!payload) return res.status(401).json({ message: 'Unauthorized' });
 
     const user = await User.findById(payload.userId).select('-passwordHash');
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
-
-    req.user = user;
+    if (!user) {
+      // Try Worker if not found in User
+      const worker = await Worker.findById(payload.userId).select('-passwordHash');
+      if (!worker) return res.status(401).json({ message: 'Unauthorized' });
+      req.user = worker;
+    } else {
+      req.user = user;
+    }
     next();
   } catch (err) {
     console.error('auth middleware', err.message);

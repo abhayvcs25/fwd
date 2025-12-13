@@ -11,6 +11,10 @@ export default function UserProfile() {
 const navigate = useNavigate(); 
 const handleLogout = () => {
     // you can clear tokens here if needed
+    localStorage.removeItem("token");
+    localStorage.removeItem("customerId");
+    localStorage.removeItem("fullName");
+    localStorage.removeItem("email");
     navigate("/");
   };
   const handleSearchClick = () => {
@@ -228,7 +232,6 @@ const handleSave = async () => {
     fontWeight: 'bold',
     fontSize: '16px',
   };
-
   const mainContentStyle = {
     flex: 1,
     overflowY: 'auto',
@@ -439,19 +442,26 @@ const handleSave = async () => {
           </div>
 
           <div style={rightNavStyle}>
-            <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
-            <div style={userProfileStyle}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                  Abhay Pawar
+              <Bell size={20} color="#666" style={{ cursor: 'pointer' }} />
+              <div style={userProfileStyle}>
+                <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+              { localStorage.getItem("fullName") || "Guest User"}
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {localStorage.getItem("email") || "user@example.com"}
+            </div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  abhay.pawar@skillmatch.com
+                <div style={avatarStyle}>
+            {(localStorage.getItem("fullName") || "G")
+              .split(' ')
+              .map(word => word[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2)}
                 </div>
               </div>
-              <div style={avatarStyle}>AP</div>
             </div>
-          </div>
         </div>
 
         {/* Profile Content */}

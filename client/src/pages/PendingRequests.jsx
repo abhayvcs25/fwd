@@ -8,6 +8,8 @@ export default function PendingRequests() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("workerId");
+
     navigate("/");
   };
 
@@ -41,13 +43,47 @@ export default function PendingRequests() {
   // ✅ Now we directly use the real pending bookings
   const pendingReqs = pendingBookings;
 
-  const handleAccept = async (id) => {
-    alert("Request accepted! (Backend update pending)");
-  };
+const handleAccept = async (bookingId) => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/bookings/accept/${bookingId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
 
-  const handleCancel = async (id) => {
-    alert("Request cancelled! (Backend update pending)");
-  };
+    const data = await res.json();
+
+    // 🔥 Remove instantly
+    setPendingBookings(prev =>
+      prev.filter(b => b.id !== bookingId)
+    );
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+ const handleCancel = async (bookingId) => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/bookings/cancel/${bookingId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await res.json();
+    console.log("Cancelled:", data);
+
+    // 🔥 Remove from UI instantly
+    setPendingBookings((prev) =>
+      prev.filter((b) => b.id !== bookingId)
+    );
+
+  } catch (err) {
+    console.error("Cancel error:", err);
+  }
+};
+
+
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", path: "/worker-dashboard" },

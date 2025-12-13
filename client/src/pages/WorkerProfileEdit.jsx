@@ -68,6 +68,9 @@ const handleInputChange = (e) => {
 };
 const handleLogout = () => {
       // you can clear tokens here if needed
+      
+    localStorage.removeItem("token");
+    localStorage.removeItem("workerId");
       navigate("/");
     };
 

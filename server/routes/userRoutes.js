@@ -55,7 +55,7 @@ if (!isMatch) return res.status(400).json({ message: 'Invalid email or password'
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || 'secretkey',
-      { expiresIn: '1h' }
+      { expiresIn: '5h' }
     );
     // avoid returning password hash
     const safeUser = user.toObject();

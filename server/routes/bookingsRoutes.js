@@ -97,6 +97,46 @@ router.get("/pending/:workerId", async (req, res) => {
   }
 });
 
+router.put("/accept/:bookingId", async (req, res) => {
+  try {
+    const bookingId = req.params.bookingId;
 
+    const updated = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status: "accepted" },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Booking not found" });
+
+    res.json({ message: "Booking accepted", booking: updated });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// 3) CANCEL a booking
+router.put("/cancel/:bookingId", async (req, res) => {
+  try {
+    const bookingId = req.params.bookingId;
+
+    const updated = await Booking.findByIdAndUpdate(
+      bookingId,
+      { status: "cancelled" },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Booking not found" });
+
+    res.json({ message: "Booking cancelled", booking: updated });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
