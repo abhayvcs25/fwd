@@ -21,20 +21,27 @@ router.post("/send", auth, async (req, res) => {
 
     // 2. Create if not exists
     if (!conversation) {
+      // Look up receiver's fullName
+      const receiverModel = receiverType === 'worker' ? Worker : User;
+      const receiverDoc = await receiverModel.findById(receiverId).select('fullName');
+      const receiverfullName = receiverDoc?.fullName || 'Unknown';
+
       conversation = await Conversation.create({
         participants: [
-          { id: senderId, role: senderType },
-          { id: receiverId, role: receiverType },
+          { id: senderId, role: senderType, fullName: req.user.fullName },
+          { id: receiverId, role: receiverType, fullName: receiverfullName },
         ],
       });
     }
 
     // 3. Save message
+    const receiverfullName = conversation.participants.find(p => p.id.toString() === receiverId.toString()).fullName;
     const msg = await Message.create({
       conversationId: conversation._id,
       senderId,
       receiverId,
-      senderfullName,
+      senderfullName: req.user.fullName,
+      receiverfullName,
       senderType,
       receiverType,
       text,
@@ -95,9 +102,6 @@ router.get('/conversations', auth, async (req, res) => {
 
         if (!otherParticipant) return null;
 
-        // 🔹 MANUAL USER LOOKUP
-        const otherUserDoc = await User.findById(otherParticipant.id).select('fullName');
-
         const lastMessage = await Message.findOne({
           conversationId: conv._id
         }).sort({ createdAt: -1 });
@@ -112,7 +116,7 @@ router.get('/conversations', auth, async (req, res) => {
           _id: conv._id,
           otherUser: {
             _id: otherParticipant.id,
-            fullName: otherUserDoc?.fullName || 'Unknown',
+            fullName: otherParticipant.fullName,
             role: otherParticipant.role
           },
           lastMessage: lastMessage ? lastMessage.text : '',
@@ -136,7 +140,7 @@ router.get('/conversations', auth, async (req, res) => {
 // create or get conversation
 router.post('/conversation', auth, async (req, res) => {
   try {
-    const { otherUserId, otherUserRole } = req.body;
+    const { otherUserId, otherUserRole, otherUserFullName } = req.body;
     const userId = req.user._id;
     const userRole = req.user.role; // assume User has role
 
@@ -145,10 +149,18 @@ router.post('/conversation', auth, async (req, res) => {
     });
 
     if (!conversation) {
+      let otherFullName = otherUserFullName;
+      if (!otherFullName) {
+        // Look up other user's fullName
+        const otherModel = otherUserRole === 'worker' ? Worker : User;
+        const otherDoc = await otherModel.findById(otherUserId).select('fullName');
+        otherFullName = otherDoc?.fullName || 'Unknown';
+      }
+
       conversation = await Conversation.create({
         participants: [
-          { id: userId, role: userRole },
-          { id: otherUserId, role: otherUserRole }
+          { id: userId, role: userRole, fullName: req.user.fullName },
+          { id: otherUserId, role: otherUserRole, fullName: otherFullName }
         ]
       });
     }

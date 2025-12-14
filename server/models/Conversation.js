@@ -6,6 +6,7 @@ const ConversationSchema = new Schema(
       {
         id: { type: Types.ObjectId, required: true },
         role: { type: String, enum: ["customer", "worker"], required: true },
+        fullName: { type: String, required: true, trim: true },
       },
     ],
   },

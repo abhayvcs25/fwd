@@ -84,6 +84,7 @@ export default function Messages() {
     console.log('Mapped Chats:', mappedChats);
 
       const workerId = searchParams.get('workerId');
+      const workerName = searchParams.get('workerName');
       if (workerId) {
         const chatIndex = data.conversations.findIndex(conv => conv.otherUser?._id === workerId);
         if (chatIndex !== -1) {
@@ -91,16 +92,18 @@ export default function Messages() {
           openChat(data.conversations[chatIndex]._id, data.conversations[chatIndex].otherUser);
         } else {
           // Create conversation
+          const body = {
+            otherUserId: workerId,
+            otherUserRole: 'worker'
+          };
+          if (workerName) body.otherUserFullName = workerName;
           const res2 = await fetch('http://localhost:5000/api/messages/conversation', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({
-              otherUserId: workerId,
-              otherUserRole: 'worker'
-            })
+            body: JSON.stringify(body)
           });
           const data2 = await res2.json();
           const newChat = {
@@ -193,7 +196,6 @@ const handleSendMessage = async () => {
         senderId: userId,
         senderType: 'customer',
         receiverId,
-        senderfullName:user.fullName,
         receiverType,
         text: messageInput,
       }),
@@ -230,6 +232,9 @@ const handleSendMessage = async () => {
           : chat
       )
     );
+
+    await fetchMessages(chatData._id);
+    await fetchConversations(userId);
 
     setMessageInput("");
   } catch (error) {

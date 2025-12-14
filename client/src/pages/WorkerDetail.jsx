@@ -674,7 +674,7 @@ console.log("Worker ID from params: !", id);
               <div style={buttonGroupStyle}>
                 <button
                   style={contactButtonStyle}
-                  onClick={() => navigate('/Messages?workerId=' + id)}
+                  onClick={() => navigate('/Messages?workerId=' + id + '&workerName=' + encodeURIComponent(worker?.fullName || ''))}
                   onMouseEnter={(e) => Object.assign(e.currentTarget.style, contactButtonHoverStyle)}
                   onMouseLeave={(e) => Object.assign(e.currentTarget.style, contactButtonStyle)}
                 >

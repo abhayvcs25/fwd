@@ -14,7 +14,9 @@ const MessageSchema = new Schema(
       required: true,
     },
 
-    senderfullName: { type: String, required: true, trim: true },   
+    senderfullName: { type: String, required: true, trim: true },
+
+    receiverfullName: { type: String, required: true, trim: true },   
 
     receiverId: {
       type: Types.ObjectId,
