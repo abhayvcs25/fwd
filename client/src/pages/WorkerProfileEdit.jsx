@@ -70,6 +70,8 @@ const handleLogout = () => {
       // you can clear tokens here if needed
       
     localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    localStorage.removeItem("fullName");
     localStorage.removeItem("workerId");
       navigate("/");
     };

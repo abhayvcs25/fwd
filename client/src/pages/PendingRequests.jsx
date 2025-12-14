@@ -9,6 +9,8 @@ export default function PendingRequests() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("workerId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("fullName");
 
     navigate("/");
   };

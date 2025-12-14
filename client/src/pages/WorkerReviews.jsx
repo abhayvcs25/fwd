@@ -13,6 +13,8 @@ export default function WorkerReviews() {
       
     localStorage.removeItem("token");
     localStorage.removeItem("workerId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("fullName");
       navigate("/");
     };
 

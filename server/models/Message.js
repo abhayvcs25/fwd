@@ -14,27 +14,22 @@ const MessageSchema = new Schema(
       required: true,
     },
 
-    senderfullName: { type: String, required: true, trim: true },
-
-    receiverfullName: { type: String, required: true, trim: true },   
-
-    receiverId: {
-      type: Types.ObjectId,
+    senderRole: {
+      type: String,
+      enum: ["customer", "worker"],
       required: true,
     },
 
-    senderType: { type: String, enum: ["customer", "worker"], required: true }, 
-    receiverType: { type: String, enum: ["customer", "worker"], required: true },
-
-    text: { type: String, default: "" },
-
-    type: {
+    text: {
       type: String,
-      enum: ["text", "image", "file"],
-      default: "text",
+      required: true,
+      trim: true,
     },
 
-    readAt: { type: Date, default: null },
+    readAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

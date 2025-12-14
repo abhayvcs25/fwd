@@ -9,63 +9,72 @@ const Worker = require('../models/Worker');
 // send message (auth required)
 router.post("/send", auth, async (req, res) => {
   try {
-    const { senderId, senderfullName,senderType, receiverId, receiverType, text } = req.body;
+    const { receiverId, receiverType, text } = req.body;
+    const senderId = req.user._id;
+    const senderRole = req.user.role;
 
-    if (!senderId || !receiverId)
-      return res.status(400).json({ message: "Missing senderId or receiverId" });
+    if (!receiverId || !text) return res.status(400).json({ message: "Missing receiverId or text" });
 
-    // 1. Check if conversation exists
     let conversation = await Conversation.findOne({
-      "participants.id": { $all: [senderId, receiverId] }
+      "participants.id": { $all: [senderId, receiverId] },
     });
 
-    // 2. Create if not exists
     if (!conversation) {
-      // Look up receiver's fullName
-      const receiverModel = receiverType === 'worker' ? Worker : User;
-      const receiverDoc = await receiverModel.findById(receiverId).select('fullName');
-      const receiverfullName = receiverDoc?.fullName || 'Unknown';
+      const model = receiverType === "worker" ? Worker : User;
+      const doc = await model.findById(receiverId).select("fullName");
+      const receiverFullName = doc?.fullName || "Unknown";
 
       conversation = await Conversation.create({
         participants: [
-          { id: senderId, role: senderType, fullName: req.user.fullName },
-          { id: receiverId, role: receiverType, fullName: receiverfullName },
+          { id: senderId, role: senderRole, fullName: req.user.fullName },
+          { id: receiverId, role: receiverType, fullName: receiverFullName },
         ],
       });
     }
 
-    // 3. Save message
-    const receiverfullName = conversation.participants.find(p => p.id.toString() === receiverId.toString()).fullName;
-    const msg = await Message.create({
+    const receiverFullName = conversation.participants.find(
+      (p) => p.id.toString() === receiverId.toString()
+    )?.fullName || "Unknown";
+
+    const message = await Message.create({
       conversationId: conversation._id,
       senderId,
       receiverId,
       senderfullName: req.user.fullName,
-      receiverfullName,
-      senderType,
-      receiverType,
+      receiverfullName: receiverFullName,
+      senderRole,
+      receiverRole: receiverType,
       text,
     });
 
-    res.status(201).json({ message: msg });
+    res.status(201).json({ message });
   } catch (err) {
-    console.error(err);
+    console.error("Error sending message:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get("/conversation/:conversationId", async (req, res) => {
+
+router.get("/conversation/:conversationId", auth, async (req, res) => {
   try {
-    const messages = await Message.find({
-      conversationId: req.params.conversationId,
-    }).sort({ createdAt: 1 });
+    const conversation = await Conversation.findById(req.params.conversationId);
+    if (!conversation)
+      return res.status(404).json({ message: "Conversation not found" });
 
-    res.json({ messages });
+    const isParticipant = conversation.participants.some(
+      p => p.id.toString() === req.user._id.toString()
+    );
+    if (!isParticipant)
+      return res.status(403).json({ message: "Forbidden" });
+
+    const messages = await Message.find({ conversationId: conversation._id }).sort({ createdAt: 1 });
+
+    // Ensure messages array always exists
+    res.json({ messages: messages || [], conversation });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 router.get("/unread/:receiverId", async (req, res) => {
   try {
@@ -84,84 +93,58 @@ router.get("/unread/:receiverId", async (req, res) => {
 
 // get conversations for user// IMPORTANT
 
-router.get('/conversations', auth, async (req, res) => {
+router.get("/conversations", auth, async (req, res) => {
   try {
     const userId = req.user._id;
 
     const conversations = await Conversation.find({
-      'participants.id': userId
+      "participants.id": userId,
+    }).populate("participants.id");
+
+    const formattedConversations = conversations.map((conv) => {
+      const otherUser = conv.participants.find((p) => p.id.toString() !== userId.toString());
+      return {
+        _id: conv._id,
+        participants: conv.participants,
+        otherUser,
+        lastMessage: conv.lastMessage || "",
+        lastMessageTime: conv.lastMessageTime || "",
+        unreadCount: conv.unreadCount || 0,
+      };
     });
 
-    const conversationsWithDetails = await Promise.all(
-      conversations.map(async (conv) => {
-
-        // find the other participant
-        const otherParticipant = conv.participants.find(
-          p => p.id.toString() !== userId.toString()
-        );
-
-        if (!otherParticipant) return null;
-
-        const lastMessage = await Message.findOne({
-          conversationId: conv._id
-        }).sort({ createdAt: -1 });
-
-        const unreadCount = await Message.countDocuments({
-          conversationId: conv._id,
-          receiverId: userId,
-          readAt: null
-        });
-
-        return {
-          _id: conv._id,
-          otherUser: {
-            _id: otherParticipant.id,
-            fullName: otherParticipant.fullName,
-            role: otherParticipant.role
-          },
-          lastMessage: lastMessage ? lastMessage.text : '',
-          lastMessageTime: lastMessage ? lastMessage.createdAt : null,
-          unreadCount
-        };
-      })
-    );
-
-    res.json({
-      conversations: conversationsWithDetails.filter(Boolean)
-    });
-
+    res.json({ conversations: formattedConversations });
   } catch (err) {
-    console.error('🔥 Conversations error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 
+
 // create or get conversation
-router.post('/conversation', auth, async (req, res) => {
+router.post("/conversation", auth, async (req, res) => {
   try {
     const { otherUserId, otherUserRole, otherUserFullName } = req.body;
     const userId = req.user._id;
-    const userRole = req.user.role; // assume User has role
+    const userRole = req.user.role;
 
     let conversation = await Conversation.findOne({
-      'participants.id': { $all: [userId, otherUserId] }
+      "participants.id": { $all: [userId, otherUserId] },
     });
 
     if (!conversation) {
-      let otherFullName = otherUserFullName;
-      if (!otherFullName) {
-        // Look up other user's fullName
-        const otherModel = otherUserRole === 'worker' ? Worker : User;
-        const otherDoc = await otherModel.findById(otherUserId).select('fullName');
-        otherFullName = otherDoc?.fullName || 'Unknown';
+      let fullName = otherUserFullName;
+      if (!fullName) {
+        const model = otherUserRole === "worker" ? Worker : User;
+        const doc = await model.findById(otherUserId).select("fullName");
+        fullName = doc?.fullName || "Unknown";
       }
 
       conversation = await Conversation.create({
         participants: [
           { id: userId, role: userRole, fullName: req.user.fullName },
-          { id: otherUserId, role: otherUserRole, fullName: otherFullName }
-        ]
+          { id: otherUserId, role: otherUserRole, fullName },
+        ],
       });
     }
 
@@ -170,6 +153,8 @@ router.post('/conversation', auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 // get recent messages for worker
 router.get('/worker/:id', auth, async (req, res) => {

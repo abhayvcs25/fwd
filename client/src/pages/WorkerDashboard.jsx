@@ -11,6 +11,8 @@ export default function WorkerDashboard (){
       
     localStorage.removeItem("token");
     localStorage.removeItem("workerId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("fullName");
       navigate("/");
     };
 

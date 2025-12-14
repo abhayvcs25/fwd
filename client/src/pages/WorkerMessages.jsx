@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 
 export default function WorkerMessages() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentReceiver, setCurrentReceiver] = useState(null);
   const [selectedChat, setSelectedChat] = useState(0);
   const [messageInput, setMessageInput] = useState('');
   const [activeNav, setActiveNav] = useState('messages');
@@ -13,196 +14,279 @@ export default function WorkerMessages() {
       // you can clear tokens here if needed
       localStorage.removeItem("token");
       localStorage.removeItem("workerId");
+      localStorage.removeItem("email");
+      localStorage.removeItem("fullName");
       navigate("/");
     };
   const [chats, setChats] = useState([]);
   const [chatData, setChatData] = useState(null);
   const [userId, setUserId] = useState(null);
   const [searchParams] = useSearchParams();
+  const [user, setUser] = useState({
+  name: "Guest User",
+  email: "user@example.com",
+});
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUserId(decoded.userId);
-        fetchConversations(decoded.userId);
-      } catch (error) {
-        console.error('Invalid token');
-      }
-    }
-  }, []);
-
-  const fetchConversations = async (userId) => {
+  
+  // ------------------- USE EFFECT -------------------
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
     try {
-      const res = await fetch('http://localhost:5000/api/messages/conversations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const decoded = jwtDecode(token);
+      setUserId(decoded.userId);
+      setUser({
+        name: decoded.fullName || decoded.name || "Guest User",
+        email: decoded.email || "user@example.com",
       });
-      const data = await res.json();
-      const mappedChats = data.conversations.map((conv) => ({
-        id: conv._id,
-        name: conv.otherUser.fullName,
-        avatar: conv.otherUser.fullName[0],
-        lastMessage: conv.lastMessage,
-        time: conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-        unread: conv.unreadCount,
-        otherUserId: conv.otherUser._id,
-        otherUserRole: conv.otherUser.role
-      }));
-      setChats(mappedChats);
-
-      const customerId = searchParams.get('customerId');
-      if (customerId) {
-        const chatIndex = data.conversations.findIndex(conv => conv.otherUser._id === customerId);
-        if (chatIndex !== -1) {
-          setSelectedChat(chatIndex);
-          openChat(data.conversations[chatIndex]._id, data.conversations[chatIndex].otherUser);
-        } else {
-          // Create conversation
-          const res2 = await fetch('http://localhost:5000/api/messages/conversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              otherUserId: customerId,
-              otherUserRole: 'customer'
-            })
-          });
-          const data2 = await res2.json();
-          const newChat = {
-            id: data2.conversation._id,
-            name: 'Customer',
-            avatar: 'C',
-            lastMessage: '',
-            time: '',
-            unread: 0,
-            otherUserId: customerId,
-            otherUserRole: 'customer'
-          };
-          const updatedChats = [...mappedChats, newChat];
-          setChats(updatedChats);
-          setSelectedChat(updatedChats.length - 1);
-          openChat(data2.conversation._id, { _id: customerId, fullName: 'Customer', role: 'customer' });
-        }
-      }
+      fetchConversations(decoded.userId);
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      console.error("Invalid token");
     }
-  };
+  }
+}, []);
 
-const getMessages = async (conversationId, otherUser) => {
+  
+
+const fetchConversations = async (userId) => {
   try {
-    const res = await fetch(
-      `http://localhost:5000/api/messages/conversation/${conversationId}`
-    );
+    const res = await fetch("http://localhost:5000/api/messages/conversations", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch conversations");
+
     const data = await res.json();
 
-    // Format messages
-    const formattedMessages = data.messages.map((msg) => ({
-      id: msg._id,
-      sender: msg.senderId === otherUser.id ? otherUser.name : "You",
-      text: msg.text,
-      time: new Date(msg.createdAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      isOwn: msg.senderId !== otherUser.id,
-    }));
+    const mappedChats = (data.conversations || [])
+      .map((conv) => {
+        if (!conv.participants || !Array.isArray(conv.participants)) return null;
 
-    // Prepare final structure
-    const chatObject = {
-      id: otherUser.id,
-      name: otherUser.name,
-      avatar: otherUser.avatar || otherUser.name[0],
-      lastMessage:
-        formattedMessages.length > 0
-          ? formattedMessages[formattedMessages.length - 1].text
-          : "",
-      time:
-        formattedMessages.length > 0
-          ? formattedMessages[formattedMessages.length - 1].time
-          : "",
-      unread: data.unread || 0,
+        const otherUser = conv.participants.find((p) => p.id !== userId);
+        if (!otherUser) return null;
+
+        return {
+          conversationId: conv._id,
+          otherUserId: otherUser.id,
+          name: otherUser.fullName || "Unknown",
+          avatar: otherUser.fullName?.[0] || "U",
+          lastMessage: conv.lastMessage || "",
+          time: conv.lastMessageTime
+            ? new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "",
+          unread: conv.unreadCount || 0,
+          otherUserRole: otherUser.role,
+        };
+      })
+      .filter(Boolean);
+
+    setChats(mappedChats);
+
+    // Auto-open chat if workerId is in URL
+    const workerId = searchParams.get("workerId");
+    const workerName = searchParams.get("workerName");
+    if (workerId) {
+      const chatIndex = mappedChats.findIndex((c) => c.otherUserId === workerId);
+      if (chatIndex !== -1) {
+        setSelectedChat(chatIndex);
+        openChat(mappedChats[chatIndex]);
+      } else {
+        const body = { otherUserId: workerId, otherUserRole: "worker" };
+        if (workerName) body.otherUserFullName = workerName;
+
+        const res2 = await fetch("http://localhost:5000/api/messages/conversation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        const data2 = await res2.json();
+
+        const newChat = {
+          conversationId: data2.conversation._id,
+          otherUserId: workerId,
+          name: workerName || "Worker",
+          avatar: (workerName || "W")[0],
+          lastMessage: "",
+          time: "",
+          unread: 0,
+          otherUserRole: "worker",
+        };
+
+        const updatedChats = [...mappedChats, newChat];
+        setChats(updatedChats);
+        setSelectedChat(updatedChats.length - 1);
+        openChat(newChat);
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+  }
+};
+  // ------------------- GET MESSAGES -------------------
+ const getMessages = async (conversationId, otherUser) => {
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/messages/conversation/${conversationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    if (!res.ok) throw new Error("Failed to fetch messages");
+
+    const data = await res.json();
+
+    if (!Array.isArray(data.messages)) {
+      throw new Error("Invalid messages response");
+    }
+
+    // Format messages safely
+    const formattedMessages = data.messages.map((msg) => {
+      const isOwnMessage = msg.senderId === userId;
+
+      return {
+        id: msg._id,
+        sender: isOwnMessage ? "You" : otherUser.fullName || otherUser.name,
+        text: msg.text,
+        time: new Date(msg.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isOwn: isOwnMessage,
+      };
+    });
+
+    // Count unread messages (messages sent TO current user)
+    const unreadCount = data.messages.filter(
+      (msg) =>
+        msg.receiverId === userId &&
+        !msg.readAt
+    ).length;
+
+    setChatData({
+      conversationId,
+      id: otherUser.id || otherUser._id,
+      name: otherUser.fullName || otherUser.name,
+      avatar:
+        otherUser.avatar ||
+        (otherUser.fullName || otherUser.name)[0],
       messages: formattedMessages,
-    };
-
-    setChatData(chatObject);
+      lastMessage: formattedMessages.at(-1)?.text || "",
+      time: formattedMessages.at(-1)?.time || "",
+      unread: unreadCount,
+    });
   } catch (error) {
     console.error("Error fetching messages:", error);
   }
 };
 
-const openChat = (conversationId, user) => {
-  getMessages(conversationId, {
-    id: user._id,
-    name: user.fullName,
-    avatar: user.fullName[0],
+  // ------------------- OPEN CHAT -------------------
+const openChat = (chat) => {
+  if (!chat || !chat.conversationId) {
+    console.error("Invalid chat object:", chat);
+    return;
+  }
+
+  setCurrentReceiver({
+    id: chat.otherUserId,
+    role: chat.otherUserRole,
+    conversationId: chat.conversationId,
+    name: chat.name,
+    avatar: chat.avatar,
+  });
+
+  getMessages(chat.conversationId, {
+    id: chat.otherUserId,
+    fullName: chat.name,
+    name: chat.name,
+    avatar: chat.avatar,
   });
 };
 
-  const handleSendMessage = async () => {
-  if (!messageInput.trim() || !userId || !chatData) return;
-
-  const receiverId = chatData.id;
-  const receiverType = chats[selectedChat]?.otherUserRole || 'customer';
-
+const handleSendMessage = async () => {
   try {
+    if (!messageInput.trim()) return;
+
+    if (!currentReceiver?.id || !currentReceiver?.role) {
+      console.error("No active receiver selected");
+      return;
+    }
+
+    const payload = {
+      receiverId: currentReceiver.id,
+      receiverType: currentReceiver.role,
+      text: messageInput.trim(),
+    };
+
     const res = await fetch("http://localhost:5000/api/messages/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify({
-        senderId: userId,
-        senderType: 'worker',
-        receiverId,
-        receiverType,
-        text: messageInput,
-      }),
+      body: JSON.stringify(payload), // ✅ plain JSON only
     });
 
-    if (!res.ok) throw new Error("Message send failed");
+    if (!res.ok) {
+      throw new Error("Message send failed");
+    }
 
-    const { message: savedMessage } = await res.json();
+    const { message } = await res.json();
 
-    const newMsg = {
-      id: savedMessage._id,
-      sender: "You",
-      text: savedMessage.text,
-      time: new Date(savedMessage.createdAt).toLocaleTimeString([], {
+    // 1️⃣ Update open chat instantly
+    setChatData((prev) => ({
+      ...prev,
+      messages: [
+        ...(prev?.messages || []),
+        {
+          id: message._id,
+          sender: "You",
+          text: message.text,
+          time: new Date(message.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          isOwn: true,
+        },
+      ],
+      lastMessage: message.text,
+      time: new Date(message.createdAt).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      isOwn: true,
-    };
-
-    // Update active chat messages
-    setChatData(prev => ({
-      ...prev,
-      messages: [...prev.messages, newMsg],
-      lastMessage: savedMessage.text,
-      time: newMsg.time,
     }));
 
-    // Update chat list preview
-    setChats(prev =>
-      prev.map((chat, idx) =>
-        idx === selectedChat
-          ? { ...chat, lastMessage: savedMessage.text, time: newMsg.time }
+    // 2️⃣ Update chat list preview
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.conversationId === message.conversationId
+          ? {
+              ...chat,
+              lastMessage: message.text,
+              time: new Date(message.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }
           : chat
       )
     );
 
+    // 3️⃣ Clear input
     setMessageInput("");
   } catch (error) {
     console.error("Error sending message:", error);
   }
 };
+
+
+
 
   const containerStyle = {
     display: 'flex',
@@ -517,60 +601,68 @@ const openChat = (conversationId, user) => {
             <div style={{ padding: '15px', borderBottom: '1px solid #e0e0e0', fontWeight: '600', color: '#333' }}>
               Messages
             </div>
-            {chats.length > 0 ? (
-              chats.map((chat, index) => (
-                <div
-                  key={chat.id}
-                  style={chatItemStyle(selectedChat === index)}
-                  onClick={() => {
-                    setSelectedChat(index);
-                    openChat(chat.id, { _id: chat.otherUserId, fullName: chat.name, role: chat.otherUserRole });
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedChat !== index) {
-                      e.currentTarget.style.backgroundColor = '#f9f9f9';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedChat !== index) {
-                      e.currentTarget.style.backgroundColor = '#ffffff';
-                    }
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <div
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: '#007BFF',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '14px',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {chat.avatar}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                        <div style={chatNameStyle}>{chat.name}</div>
-                        {chat.unread > 0 && <div style={unreadBadgeStyle}>{chat.unread}</div>}
-                      </div>
-                      <div style={chatMessageStyle}>{chat.lastMessage}</div>
-                      <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>{chat.time}</div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
-                No conversations yet. Start chatting with customers!
-              </div>
-            )}
+           {chats.length > 0 ? (
+  chats.map((chat, index) => (
+    <div
+      key={chat.conversationId || chat.otherUserId} // unique key
+      style={chatItemStyle(selectedChat === index)}
+      onClick={() => {
+        setSelectedChat(index);
+        openChat(chat); // pass full chat object
+      }}
+      onMouseEnter={(e) => {
+        if (selectedChat !== index) {
+          e.currentTarget.style.backgroundColor = '#f9f9f9';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (selectedChat !== index) {
+          e.currentTarget.style.backgroundColor = '#ffffff';
+        }
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: '#007BFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            flexShrink: 0,
+          }}
+        >
+          {chat.avatar}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <div style={chatNameStyle}>{chat.name}</div>
+            {chat.unread > 0 && <div style={unreadBadgeStyle}>{chat.unread}</div>}
+          </div>
+          <div style={chatMessageStyle}>{chat.lastMessage}</div>
+          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>{chat.time}</div>
+        </div>
+      </div>
+    </div>
+  ))
+) : (
+  <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
+    No conversations yet. Start chatting with workers!
+  </div>
+)}
+
           </div>
 
           {/* Chat Window */}
@@ -603,58 +695,79 @@ const openChat = (conversationId, user) => {
 
             {/* Messages */}
             <div style={messagesAreaStyle}>
-              {chatData?.messages?.length > 0 ? (
-                chatData.messages.map((msg) => (
-                  <div key={msg.id}>
-                    <div style={messageStyle(msg.isOwn)}>
-                      <div style={messageBubbleStyle(msg.isOwn)}>{msg.text}</div>
-                    </div>
-                    <div style={messageTimeStyle}>{msg.time}</div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ textAlign: 'center', color: '#666', fontSize: '14px', marginTop: '20px' }}>
-                  No messages yet. Start the conversation!
-                </div>
-              )}
-            </div>
+  {chatData?.messages?.length > 0 ? (
+    chatData.messages.map((msg) => (
+      <div key={msg.id}>
+        <div style={messageStyle(msg.isOwn)}>
+          <div style={messageBubbleStyle(msg.isOwn)}>{msg.text}</div>
+        </div>
+        <div style={messageTimeStyle}>{msg.time}</div>
+      </div>
+    ))
+  ) : (
+    <div style={{ textAlign: 'center', color: '#666', fontSize: '14px', marginTop: '20px' }}>
+      No messages yet. Start the conversation!
+    </div>
+  )}
+</div>
+
 
             {/* Input Area */}
-            <div style={inputContainerStyle}>
-              <textarea
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder={chatData ? "Type your message..." : "Select a chat to start messaging"}
-                style={inputFieldStyle}
-                disabled={!chatData}
-              />
-              <button
-                onClick={handleSendMessage}
-                style={sendButtonStyle}
-                disabled={!chatData || !messageInput.trim()}
-                onMouseEnter={(e) => {
-                  if (chatData && messageInput.trim()) {
-                    Object.assign(e.currentTarget.style, {
-                      ...sendButtonStyle,
-                      backgroundColor: '#0056b3',
-                    });
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (chatData && messageInput.trim()) {
-                    Object.assign(e.currentTarget.style, sendButtonStyle);
-                  }
-                }}
-              >
-                <Send size={18} />
-              </button>
-            </div>
+          <div style={inputContainerStyle}>
+  <textarea
+    value={messageInput}
+    onChange={(e) => setMessageInput(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (chatData && messageInput.trim()) {
+          handleSendMessage();
+        }
+      }
+    }}
+    placeholder={
+      chatData
+        ? "Type your message..."
+        : "Select a chat to start messaging"
+    }
+    style={inputFieldStyle}
+    disabled={!chatData}
+  />
+
+  <button
+    type="button"
+    onClick={() => {
+      if (chatData && messageInput.trim()) {
+        handleSendMessage();
+      }
+    }}
+    style={{
+      ...sendButtonStyle,
+      backgroundColor:
+        chatData && messageInput.trim()
+          ? sendButtonStyle.backgroundColor
+          : "#ccc",
+      cursor:
+        chatData && messageInput.trim() ? "pointer" : "not-allowed",
+    }}
+    disabled={!chatData || !messageInput.trim()}
+    onMouseEnter={(e) => {
+      if (chatData && messageInput.trim()) {
+        e.currentTarget.style.backgroundColor = "#0056b3";
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (chatData && messageInput.trim()) {
+        e.currentTarget.style.backgroundColor =
+          sendButtonStyle.backgroundColor;
+      }
+    }}
+  >
+    <Send size={18} />
+  </button>
+</div>
+
+
           </div>
         </div>
       </div>
