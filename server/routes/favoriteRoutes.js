@@ -5,14 +5,14 @@ const auth = require('../middleware/auth');
 const Worker = require('../models/Worker');
 const User = require('../models/User');
 
-// GET /favorites
+// GET /favorites - returns authenticated user's favorite workers
 router.get('/', auth, async (req, res) => {
   try {
     const customerId = req.user._id;
-    const favorites = await Favorite.find({ customerId }).select('workerId');
-    // return array of workerIds
-    const favoriteWorkerIds = favorites.map(f => f.workerId.toString());
-    res.json({ favoriteWorkerIds });
+    const favorites = await Favorite.find({ customerId }).populate('workerId');
+    // Return array of worker objects
+    const favoriteWorkers = favorites.map(f => f.workerId);
+    res.json({ favorites: favoriteWorkers });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -47,26 +47,28 @@ router.post('/add', auth, async (req, res) => {
   }
 });
 
-// ➤ REMOVE favorite
-router.post('/remove', auth, async (req, res) => {
+// ➤ REMOVE favorite (DELETE /favorite/:workerId)
+router.delete('/:workerId', auth, async (req, res) => {
   try {
     const customerId = req.user._id;
-    const { workerId } = req.body;
+    const workerId = req.params.workerId;
 
     const deleted = await Favorite.findOneAndDelete({ customerId, workerId });
 
     if (!deleted) {
       return res.status(404).json({ message: "Favorite not found" });
     }
-await Worker.updateOne(
-          { _id: workerId },
-          { $inc: {"stats.favoritesCount" : -1 } }
-        );
-    
-        await User.updateOne(
-          { _id: customerId },
-          { $inc: { "stats.favoritesCount": -1 } }
-        );
+
+    await Worker.updateOne(
+      { _id: workerId },
+      { $inc: { "stats.favoritesCount": -1 } }
+    );
+
+    await User.updateOne(
+      { _id: customerId },
+      { $inc: { "stats.favoritesCount": -1 } }
+    );
+
     res.json({ message: "Removed from favorites" });
 
   } catch (err) {

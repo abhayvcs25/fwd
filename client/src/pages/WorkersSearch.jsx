@@ -411,16 +411,18 @@ export default function WorkersSearch() {
                 onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
               >
                 <img
-                  src={worker.image}
-                  alt={worker.name}
-                  style={{
-                    width: '100%',
-                    height: '200px',
-                    objectFit: 'cover',
-                    objectPosition: 'top', 
-                    display: 'block',
-                  }}
-                />
+  src={worker.profile?.image}
+  alt={worker.fullName}
+  style={{
+    width: '100%',
+    height: '200px',
+    objectFit: 'cover',
+    objectPosition: 'top',
+    display: 'block',
+  }}
+  onClick={() => handleProfileClick(worker._id)} 
+/>
+
 
                 {/* Card Content */}
                 <div key={worker._id} style={cardContentStyle}>

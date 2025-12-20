@@ -1,10 +1,63 @@
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
 
 export default function WorkerDashboard (){
   const [activeNav, setActiveNav] = useState("dashboard")
+  const [summary, setSummary] = useState({})
+  const [upcomingJobs, setUpcomingJobs] = useState([])
+  const [recentMessages, setRecentMessages] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [summaryRes, jobsRes, messagesRes, reviewsRes] = await Promise.all([
+        fetch('http://localhost:5000/api/worker-dashboard/summary', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:5000/api/worker-dashboard/upcoming-jobs', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:5000/api/worker-dashboard/recent-messages', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:5000/api/worker-dashboard/reviews', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+      ]);
+
+      if (summaryRes.ok) {
+        const data = await summaryRes.json();
+        setSummary(data);
+      }
+
+      if (jobsRes.ok) {
+        const data = await jobsRes.json();
+        setUpcomingJobs(data.jobs);
+      }
+
+      if (messagesRes.ok) {
+        const data = await messagesRes.json();
+        setRecentMessages(data.messages);
+      }
+
+      if (reviewsRes.ok) {
+        const data = await reviewsRes.json();
+        setReviews(data.reviews);
+      }
+    } catch (error) {
+      console.error('Error fetching worker dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
     const handleLogout = () => {
       // you can clear tokens here if needed
@@ -16,24 +69,7 @@ export default function WorkerDashboard (){
       navigate("/");
     };
 
-
-  const upcomingJobs = [
-    { id: 1, title: "Website Design", customer: "John Smith", status: "Pending" },
-    { id: 2, title: "App Development", customer: "Sarah Johnson", status: "In Progress" },
-    { id: 3, title: "Content Writing", customer: "Mike Davis", status: "Scheduled" },
-  ]
-
-  const recentMessages = [
-    { id: 1, from: "John Smith", message: "Can you start the project tomorrow?", time: "2 hours ago" },
-    { id: 2, from: "Sarah Johnson", message: "Great work on the design mockup!", time: "4 hours ago" },
-  ]
-
-  const reviews = [
-    { id: 1, author: "John Smith", rating: 5, comment: "Excellent work, highly recommended!" },
-    { id: 2, author: "Sarah Johnson", rating: 5, comment: "Very professional and timely delivery." },
-  ]
-
-  const styles = {
+    const styles = {
     container: {
       display: "flex",
       height: "100vh",
@@ -358,40 +394,68 @@ export default function WorkerDashboard (){
       </nav>
         {/* Info Cards */}
         <div style={styles.infoCardsContainer}>
-          <div style={styles.infoCard}>
-            <div style={styles.cardIcon}>💪</div>
-            <div style={styles.cardLabel}>Active Jobs</div>
-            <div style={styles.cardValue}>5</div>
-          </div>
-          <div style={styles.infoCard}>
-            <div style={styles.cardIcon}>✅</div>
-            <div style={styles.cardLabel}>Completed Jobs</div>
-            <div style={styles.cardValue}>42</div>
-          </div>
-          <div style={styles.infoCard}>
-            <div style={styles.cardIcon}>⏳</div>
-            <div style={styles.cardLabel}>Pending Requests</div>
-            <div style={styles.cardValue}>3</div>
-          </div>
-          <div style={styles.infoCard}>
-            <div style={styles.cardIcon}>💰</div>
-            <div style={styles.cardLabel}>Total Earnings</div>
-            <div style={styles.cardValue}>$2,450</div>
-          </div>
+          {loading ? (
+            Array(4).fill(0).map((_, index) => (
+              <div key={index} style={styles.infoCard}>
+                <div style={{...styles.cardIcon, backgroundColor: '#f0f0f0'}}></div>
+                <div style={{...styles.cardLabel, backgroundColor: '#f0f0f0', height: '12px'}}></div>
+                <div style={{...styles.cardValue, backgroundColor: '#f0f0f0', height: '28px'}}></div>
+              </div>
+            ))
+          ) : (
+            <>
+              <div style={styles.infoCard}>
+                <div style={styles.cardIcon}>💪</div>
+                <div style={styles.cardLabel}>Active Jobs</div>
+                <div style={styles.cardValue}>{summary.activeJobs || 0}</div>
+              </div>
+              <div style={styles.infoCard}>
+                <div style={styles.cardIcon}>✅</div>
+                <div style={styles.cardLabel}>Completed Jobs</div>
+                <div style={styles.cardValue}>{summary.completedJobs || 0}</div>
+              </div>
+              <div style={styles.infoCard}>
+                <div style={styles.cardIcon}>⏳</div>
+                <div style={styles.cardLabel}>Pending Requests</div>
+                <div style={styles.cardValue}>{summary.pendingRequests || 0}</div>
+              </div>
+              <div style={styles.infoCard}>
+                <div style={styles.cardIcon}>💰</div>
+                <div style={styles.cardLabel}>Total Earnings</div>
+                <div style={styles.cardValue}>${summary.totalEarnings || 0}</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Upcoming Jobs */}
         <div style={styles.section}>
           <div style={styles.sectionTitle}>📋 Upcoming Jobs</div>
-          {upcomingJobs.map((job) => (
-            <div key={job.id} style={styles.jobCard}>
-              <div style={styles.jobInfo}>
-                <div style={styles.jobTitle}>{job.title}</div>
-                <div style={styles.jobCustomer}>by {job.customer}</div>
+          {loading ? (
+            Array(3).fill(0).map((_, index) => (
+              <div key={index} style={styles.jobCard}>
+                <div style={styles.jobInfo}>
+                  <div style={{...styles.jobTitle, backgroundColor: '#f0f0f0', height: '16px'}}></div>
+                  <div style={{...styles.jobCustomer, backgroundColor: '#f0f0f0', height: '13px'}}></div>
+                </div>
+                <div style={{...styles.statusBadge, backgroundColor: '#f0f0f0', width: '80px', height: '24px'}}></div>
               </div>
-              <span style={{ ...styles.statusBadge, ...getStatusStyle(job.status) }}>{job.status}</span>
+            ))
+          ) : upcomingJobs.length > 0 ? (
+            upcomingJobs.map((job) => (
+              <div key={job.id} style={styles.jobCard}>
+                <div style={styles.jobInfo}>
+                  <div style={styles.jobTitle}>{job.title}</div>
+                  <div style={styles.jobCustomer}>by {job.customer}</div>
+                </div>
+                <span style={{ ...styles.statusBadge, ...getStatusStyle(job.status) }}>{job.status}</span>
+              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+              No upcoming jobs.
             </div>
-          ))}
+          )}
         </div>
 
         {/* Two Column Layout for Messages and Reviews */}
@@ -399,13 +463,27 @@ export default function WorkerDashboard (){
           {/* Recent Messages */}
           <div style={styles.section}>
             <div style={styles.sectionTitle}>💬 Recent Messages</div>
-            {recentMessages.map((msg) => (
-              <div key={msg.id} style={styles.messageCard}>
-                <div style={styles.messageSender}>{msg.from}</div>
-                <div style={styles.messageText}>{msg.message}</div>
-                <div style={styles.messageTime}>{msg.time}</div>
+            {loading ? (
+              Array(2).fill(0).map((_, index) => (
+                <div key={index} style={styles.messageCard}>
+                  <div style={{...styles.messageSender, backgroundColor: '#f0f0f0', height: '14px'}}></div>
+                  <div style={{...styles.messageText, backgroundColor: '#f0f0f0', height: '13px'}}></div>
+                  <div style={{...styles.messageTime, backgroundColor: '#f0f0f0', height: '12px'}}></div>
+                </div>
+              ))
+            ) : recentMessages.length > 0 ? (
+              recentMessages.map((msg) => (
+                <div key={msg.id} style={styles.messageCard}>
+                  <div style={styles.messageSender}>{msg.from}</div>
+                  <div style={styles.messageText}>{msg.message}</div>
+                  <div style={styles.messageTime}>{msg.time}</div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                No recent messages.
               </div>
-            ))}
+            )}
           </div>
 
           {/* Ratings & Reviews */}

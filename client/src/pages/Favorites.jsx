@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from "react-router-dom";
 import { Home,Menu, Heart, MessageSquare, User, HelpCircle, LogOut, Bell, X, Search,  Star } from 'lucide-react';
 export default function Favorites() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const navigate = useNavigate(); 
+  const [favorites, setFavorites] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
+
   const handleLogout = () => {
       // you can clear tokens here if needed
       localStorage.removeItem("token");
@@ -12,105 +18,45 @@ export default function Favorites() {
     localStorage.removeItem("email");
       navigate("/");
     };
-    const handleSearchClick = () => {
+     const handleSearchClick = () => {
     navigate("/search"); // <-- change to your search page route
   };
-  const [favorites, setFavorites] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      service: 'Web Design',
-      rating: 4.8,
-      reviews: 245,
-      price: '$50/hour',
-      avatar: 'JS',
-      isFavorite: true,
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      service: 'Logo Design',
-      rating: 4.9,
-      reviews: 189,
-      price: '$45/hour',
-      avatar: 'SJ',
-      isFavorite: true,
-    },
-    {
-      id: 3,
-      name: 'Mike Davis',
-      service: 'Content Writing',
-      rating: 4.7,
-      reviews: 312,
-      price: '$30/hour',
-      avatar: 'MD',
-      isFavorite: true,
-    },
-    {
-      id: 4,
-      name: 'Emma Wilson',
-      service: 'Social Media Marketing',
-      rating: 4.6,
-      reviews: 156,
-      price: '$40/hour',
-      avatar: 'EW',
-      isFavorite: true,
-    },
-    {
-      id: 5,
-      name: 'Alex Chen',
-      service: 'Mobile App Development',
-      rating: 4.9,
-      reviews: 287,
-      price: '$75/hour',
-      avatar: 'AC',
-      isFavorite: true,
-    },
-    {
-      id: 6,
-      name: 'Lisa Brown',
-      service: 'Graphic Design',
-      rating: 4.8,
-      reviews: 198,
-      price: '$55/hour',
-      avatar: 'LB',
-      isFavorite: true,
-    },
-  ]);
+  const fetchFavorites = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/favorite', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFavorites(data.favorites || []);
+        console.log("Fetched favorites:", data.favorites);
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    }
+  };
 
   const handleRemoveFavorite = async (workerId) => {
-  try {
-    const res = await fetch("http://localhost:5000/favorite/remove", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // if using JWT
-      },
-      body: JSON.stringify({ workerId }),
-    });
+    try {
+      const res = await fetch(`http://localhost:5000/favorite/${workerId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    // Some responses (404 from dev server or 204) may have empty body — parse safely
-    let data = {};
-    if (res.headers.get('content-type')?.includes('application/json')) {
-      try { data = await res.json(); } catch (e) { data = {}; }
+      if (res.ok) {
+        // Update UI by removing the worker from state
+        setFavorites(prev => prev.filter(worker => worker._id !== workerId));
+      } else {
+        console.error('Failed to remove favorite');
+      }
+    } catch (error) {
+      console.error("Error removing favorite:", error);
     }
-
-    if (!res.ok) {
-      console.error(data.message || `Failed to remove (status ${res.status})`);
-      return;
-    }
-
-    // Update UI after successful delete.
-    // Support both mocked shape (fav.id) and real API shape (fav.workerId or fav.workerId._id)
-    setFavorites((prev) => prev.filter((fav) => {
-      const favWorkerId = fav.workerId ? (fav.workerId._id || fav.workerId) : fav.id;
-      return String(favWorkerId) !== String(workerId);
-    }));
-
-  } catch (error) {
-    console.error("Error removing favorite:", error);
-  }
-};
+  };
 
 
   const containerStyle = {
@@ -507,22 +453,25 @@ export default function Favorites() {
             <div style={gridStyle}>
               {favorites.map((worker) => (
                 <div
-                  key={worker.id}
+                  key={worker._id}
                   style={cardStyle}
+                  onClick={() => navigate(`/worker-detail/${worker._id}`)}
                   onMouseEnter={(e) => Object.assign(e.currentTarget.style, cardHoverStyle)}
                   onMouseLeave={(e) => Object.assign(e.currentTarget.style, cardStyle)}
                 >
                   <div style={cardHeaderStyle}>
                     <div style={workerInfoStyle}>
-                      <div style={workerAvatarStyle}>{worker.avatar}</div>
+                      <div style={workerAvatarStyle}>
+                        {worker.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </div>
                       <div>
-                        <div style={workerNameStyle}>{worker.name}</div>
-                        <div style={serviceNameStyle}>{worker.service}</div>
+                        <div style={workerNameStyle}>{worker.fullName}</div>
+                        <div style={serviceNameStyle}>{worker.skills[0] || 'Service'}</div>
                       </div>
                     </div>
                     <button
                       style={favoriteButtonStyle}
-                      onClick={() => handleRemoveFavorite(worker.id)}
+                      onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(worker._id); }}
                       title="Remove from favorites"
                     >
                       <Heart size={20} fill="#FFC107" />
@@ -532,16 +481,23 @@ export default function Favorites() {
                   <div style={ratingStyle}>
                     <div style={starStyle}>
                       <Star size={16} fill="#FFC107" />
-                      <span style={ratingTextStyle}>{worker.rating}</span>
+                      <span style={ratingTextStyle}>{worker.stats.ratingAverage.toFixed(1)}</span>
                     </div>
-                    <div style={reviewsStyle}>({worker.reviews} reviews)</div>
+                    <div style={reviewsStyle}>({worker.stats.ratingCount} reviews)</div>
                   </div>
 
-                  <div style={priceStyle}>{worker.price}</div>
+                  <div style={priceStyle}>${worker.hourlyRate}/hour</div>
 
                   <div style={buttonGroupStyle}>
                     <button 
                       style={contactButtonStyle}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(
+                          `/Messages?workerId=${worker._id}&workerName=${encodeURIComponent(worker?.fullName || '')}`
+                        );
+                      }}
+
                       onMouseEnter={(e) => {
                         Object.assign(e.currentTarget.style, {
                           ...contactButtonStyle,
@@ -565,7 +521,7 @@ export default function Favorites() {
                       onMouseLeave={(e) => {
                         Object.assign(e.currentTarget.style, removeButtonStyle);
                       }}
-                      onClick={() => handleRemoveFavorite(worker.id)}
+                      onClick={() => handleRemoveFavorite(worker._id)}
                     >
                       Remove
                     </button>

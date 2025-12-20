@@ -12,6 +12,8 @@ const messagesRoutes = require('./routes/messagesRoutes.js');
 const transactionRoutes = require('./routes/transactionRoutes.js');
 const requestsRoutes = require('./routes/requestsRoutes.js');
 const workerRoutes = require('./routes/workersRoutes.js');
+const dashboardRoutes = require('./routes/dashboardRoutes.js');
+const workerDashboardRoutes = require('./routes/workerDashboardRoutes.js');
 
 
 
@@ -34,6 +36,8 @@ app.use('/api/messages', messagesRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/workers', workerRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/worker-dashboard', workerDashboardRoutes);
 
 
 // Health Check

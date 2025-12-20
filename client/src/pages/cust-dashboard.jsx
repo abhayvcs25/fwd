@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Home, X, Heart, MessageSquare, User, Menu, HelpCircle, LogOut, Search, Bell } from "lucide-react"
 import { useNavigate, Link } from "react-router-dom";
 
@@ -7,8 +7,85 @@ import { useNavigate, Link } from "react-router-dom";
 export default function CustomerDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [summary, setSummary] = useState([])
+  const [recentBookings, setRecentBookings] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [summaryRes, pendingBookingsRes, bookingsRes, messagesRes] = await Promise.all([
+        fetch('http://localhost:5000/api/dashboard/summary', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:5000/api/dashboard/pending-bookings-count', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:5000/api/dashboard/recent-bookings', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        fetch('http://localhost:5000/api/dashboard/messages', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+      ]);
+
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        if (pendingBookingsRes.ok) {
+          const pendingData = await pendingBookingsRes.json();
+          setSummary([
+            { title: "Total Bookings", value: summaryData.totalBookings, icon: "📅", bgColor: "bg-blue-50" },
+            { title: "Pending Bookings", value: pendingData.count, icon: "⚡", bgColor: "bg-amber-50" },
+            { title: "Messages", value: summaryData.totalMessages, icon: "💬", bgColor: "bg-purple-50" },
+            { title: "Saved Favorites", value: summaryData.totalFavorites, icon: "❤️", bgColor: "bg-red-50" },
+          ]);
+        }
+      }
+
+      if (bookingsRes.ok) {
+        const bookingsData = await bookingsRes.json();
+        setRecentBookings(bookingsData.bookings.map((b, index) => ({
+          id: index + 1,
+          worker: b.workerName,
+          service: b.serviceName,
+          date: b.bookingDate,
+          status: b.status,
+          statusColor: getStatusColor(b.status)
+        })));
+      }
+
+      if (messagesRes.ok) {
+        const messagesData = await messagesRes.json();
+        setNotifications(messagesData.messages.map((m, index) => ({
+          id: index + 1,
+          sender: m.senderName,
+          message: m.lastMessageText,
+          time: new Date(m.timestamp).toLocaleString()
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const handleLogout = () => {
     // you can clear tokens here if needed
@@ -22,63 +99,12 @@ export default function CustomerDashboard() {
   const handleSearchClick = () => {
     navigate("/search"); // <-- change to your search page route
   };
-  // Mock user data
+
   const user = {
-    name: "Abhay Pawar",
-    email: "abhay.pawar@skillmatch.com",
-    avatar: "AP",
+    name: localStorage.getItem("fullName") || "Guest User",
+    email: localStorage.getItem("email") || "user@example.com",
+    avatar: (localStorage.getItem("fullName") || "G").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
   }
-
-  // Mock summary data
-  const summary = [
-    { title: "Total Bookings", value: "12", icon: "📅", bgColor: "bg-blue-50" },
-    { title: "Active Requests", value: "3", icon: "⚡", bgColor: "bg-amber-50" },
-    { title: "Unread Messages", value: "5", icon: "💬", bgColor: "bg-purple-50" },
-    { title: "Saved Favorites", value: "8", icon: "❤️", bgColor: "bg-red-50" },
-  ]
-
-  // Mock recent bookings data
-  const recentBookings = [
-    {
-      id: 1,
-      worker: "John Smith",
-      service: "Web Design",
-      date: "Nov 15, 2024",
-      status: "Completed",
-      statusColor: "bg-green-100 text-green-800",
-    },
-    {
-      id: 2,
-      worker: "Emma Davis",
-      service: "Logo Design",
-      date: "Nov 14, 2024",
-      status: "In Progress",
-      statusColor: "bg-blue-100 text-blue-800",
-    },
-    {
-      id: 3,
-      worker: "Michael Chen",
-      service: "Content Writing",
-      date: "Nov 13, 2024",
-      status: "Pending",
-      statusColor: "bg-yellow-100 text-yellow-800",
-    },
-    {
-      id: 4,
-      worker: "Lisa Johnson",
-      service: "Social Media Marketing",
-      date: "Nov 12, 2024",
-      status: "Completed",
-      statusColor: "bg-green-100 text-green-800",
-    },
-  ]
-
-  // Mock messages/notifications
-  const notifications = [
-    { id: 1, sender: "John Smith", message: "Your project is almost complete!", time: "2h ago" },
-    { id: 2, sender: "Support Team", message: "We received your inquiry", time: "4h ago" },
-    { id: 3, sender: "Emma Davis", message: "Can we schedule a meeting?", time: "1d ago" },
-  ]
 
   // Sidebar menu items
   const menuItems = [
@@ -239,20 +265,34 @@ export default function CustomerDashboard() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {summary.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm font-medium">{item.title}</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-2">{item.value}</p>
+              {loading ? (
+                Array(4).fill(0).map((_, index) => (
+                  <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 animate-pulse">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                        <div className="h-8 bg-gray-200 rounded w-12"></div>
+                      </div>
+                      <div className="h-8 w-8 bg-gray-200 rounded"></div>
                     </div>
-                    <div className="text-3xl">{item.icon}</div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                summary.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-gray-600 text-sm font-medium">{item.title}</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-2">{item.value}</p>
+                      </div>
+                      <div className="text-3xl">{item.icon}</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Main Content Grid */}
@@ -282,20 +322,37 @@ export default function CustomerDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {recentBookings.map((booking) => (
-                          <tr key={booking.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{booking.worker}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{booking.service}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{booking.date}</td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${booking.statusColor}`}
-                              >
-                                {booking.status}
-                              </span>
+                        {loading ? (
+                          Array(3).fill(0).map((_, index) => (
+                            <tr key={index} className="border-b border-gray-200">
+                              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                            </tr>
+                          ))
+                        ) : recentBookings.length > 0 ? (
+                          recentBookings.map((booking) => (
+                            <tr key={booking.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                              <td className="px-6 py-4 text-sm font-medium text-gray-900">{booking.worker}</td>
+                              <td className="px-6 py-4 text-sm text-gray-600">{booking.service}</td>
+                              <td className="px-6 py-4 text-sm text-gray-600">{booking.date}</td>
+                              <td className="px-6 py-4">
+                                <span
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${booking.statusColor}`}
+                                >
+                                  {booking.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
+                              No recent bookings found.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -314,20 +371,38 @@ export default function CustomerDashboard() {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   <div className="divide-y divide-gray-200">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm text-gray-900">{notification.sender}</p>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.message}</p>
+                    {loading ? (
+                      Array(3).fill(0).map((_, index) => (
+                        <div key={index} className="px-6 py-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                              <div className="h-3 bg-gray-200 rounded w-48"></div>
+                            </div>
+                            <div className="h-3 bg-gray-200 rounded w-12 ml-2"></div>
                           </div>
-                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{notification.time}</span>
                         </div>
+                      ))
+                    ) : notifications.length > 0 ? (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm text-gray-900">{notification.sender}</p>
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.message}</p>
+                            </div>
+                            <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{notification.time}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-6 py-8 text-center text-gray-500">
+                        No messages yet.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
                 <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">

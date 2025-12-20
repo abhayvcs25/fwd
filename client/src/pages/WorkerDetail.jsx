@@ -239,8 +239,9 @@ console.log("Worker ID from params: !", id);
     height: '500px',
     borderRadius: '12px',
     backgroundColor: '#e0e0e0',
-    backgroundSize: 'cover',
+    backgroundSize: 'contain',
     backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
   };
 
@@ -507,7 +508,7 @@ console.log("Worker ID from params: !", id);
             <div
               style={{
                 ...profileImageStyle,
-                backgroundImage: `url('${worker.image}')`,
+                backgroundImage: `url('${worker.profile?.image || 'https://via.placeholder.com/500'}')`,
               }}
             />
 

@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import { Home, BookOpen, Heart, MessageSquare, User, Settings, HelpCircle, LogOut, Search, Bell, ArrowLeft, Menu ,X} from 'lucide-react';
 import { useNavigate,Link } from "react-router-dom";
@@ -7,7 +5,9 @@ import { useNavigate,Link } from "react-router-dom";
 
 export default function SearchPage() {
   const [sidebarOpen] = useState(true);
-   const navigate = useNavigate();
+  const [searchInput, setSearchInput] = useState('');
+  const [searchNotFound, setSearchNotFound] = useState(false);
+  const navigate = useNavigate();
   
     const handleLogout = () => {
       // you can clear tokens here if needed
@@ -40,6 +40,246 @@ export default function SearchPage() {
   { name: 'Laundry', bg: '#FFC107', path: '/workers-search?skill=Laundry' },
   { name: 'Technician', bg: '#007BFF', path: '/workers-search?skill=Technician' },
 ];
+
+const skills = [
+  {
+    skill: 'electrician',
+    aliases: [
+      'electrician',
+      'electric work',
+      'electrical',
+      'electric repair',
+      'wireman',
+      'light fitting',
+      'switch repair',
+      'power issue',
+      'electrician worker',
+      'electric ka kaam',
+      'light ka problem',
+      'current nahi aa raha',
+      'switch kharab hai',
+      'wire ka kaam',
+      'bijli ka kaam'
+    ]
+  },
+  {
+    skill: 'plumber',
+    aliases: [
+      'plumber',
+      'plumbing',
+      'pipe repair',
+      'water leakage',
+      'leakage',
+      'tap repair',
+      'bathroom repair',
+      'water problem',
+      'pipe se pani leak ho raha',
+      'nal se pani tapak raha',
+      'water leak ho raha',
+      'bathroom ka pani bahar aa raha',
+      'commode ka problem',
+      'flush kharab hai'
+    ]
+  },
+  {
+    skill: 'barber',
+    aliases: [
+      'barber',
+      'haircut',
+      'hair cutting',
+      'salon',
+      'hair stylist',
+      'mens haircut',
+      'shaving',
+      'cutting karwani hai',
+      'baal katwane hai',
+      'shaving karni hai',
+      'haircut chahiye',
+      'salon wala chahiye',
+
+    ]
+  },
+  {
+    skill: 'domestic helper',
+    aliases: [
+      'domestic helper',
+      'maid',
+      'house maid',
+      'house help',
+      'home helper',
+      'cleaning lady',
+      'cleaner',
+      'bai chahiye',
+      'ghar ke kaam ke liye maid',
+      'jhaadu pocha ke liye bai',
+      'ghar safai ke liye madam',
+      'house ka kaam karne wali'
+
+    ]
+  },
+  {
+    skill: 'painter',
+    aliases: [
+      'painter',
+      'painting',
+      'wall painting',
+      'house painting',
+      'paint work',
+      'interior painting',
+      'ghar rangna hai',
+      'wall paint karna hai',
+      'ghar painting ka kaam',
+      'rangai putai'
+
+    ]
+  },
+  {
+    skill: 'carpenter',
+    aliases: [
+      'carpenter',
+      'wood work',
+      'furniture repair',
+      'door repair',
+      'cabinet work',
+      'wardrobe work',
+      'lakdi ka kaam',
+      'darwaza repair karna hai',
+      'almari ka kaam',
+      'bed repair karna hai'
+    ]
+  },
+  {
+    skill: 'ac mechanic',
+    aliases: [
+      'ac mechanic',
+      'ac repair',
+      'air conditioner',
+      'air conditioning',
+      'ac service',
+      'ac installation',
+      'cooling problem',
+      'lakdi ka kaam',
+      'darwaza repair karna hai',
+      'almari ka kaam',
+      'bed repair karna hai'
+
+    ]
+  },
+  {
+    skill: 'gardener',
+    aliases: [
+      'gardener',
+      'garden work',
+      'mali',
+      'plant care',
+      'lawn maintenance',
+      'garden cleaning',
+      'mali chahiye',
+      'bagicha saaf karna hai',
+      'plants ka dhyan rakhne wala',
+      'garden ka kaam'
+
+    ]
+  },
+  {
+    skill: 'driver',
+    aliases: [
+      'driver',
+      'car driver',
+      'personal driver',
+      'chauffeur',
+      'driving service'
+    ]
+  },
+  {
+    skill: 'cook',
+    aliases: [
+      'cook',
+      'chef',
+      'home cook',
+      'personal cook',
+      'kitchen help',
+      'cooking service',
+      'khana banane wali chahiye',
+      'ghar ka cook',
+      'roti sabzi banane wala',
+      'cook chahiye'
+
+    ]
+  },
+  {
+    skill: 'laundry',
+    aliases: [
+      'laundry',
+      'washing clothes',
+      'cloth washing',
+      'dry cleaning',
+      'iron clothes',
+      'press clothes',
+      'kapde dhone ke liye',
+      'kapde press karne hai',
+      'dhobi chahiye',
+      'clothes washing service'
+
+    ]
+  },
+  {
+    skill: 'technician',
+    aliases: [
+      'technician',
+      'repair technician',
+      'service technician',
+      'machine repair',
+      'general repair',
+      'maintenance work'
+    ]
+  }
+];
+
+// Normalize input: lowercase, remove punctuation, trim and normalize whitespace
+function normalizeInput(input) {
+  return input
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ') // replace punctuation with space
+    .replace(/\s+/g, ' ') // replace multiple spaces with single space
+    .trim();
+}
+
+// Detect skill from input using normalized aliases
+function detectSkill(input) {
+  const normalizedInput = normalizeInput(input);
+  if (!normalizedInput) return null;
+
+  // Build alias index: normalize aliases once and sort by length descending
+  const aliasIndex = [];
+  skills.forEach(skillObj => {
+    skillObj.aliases.forEach(alias => {
+      const normalizedAlias = normalizeInput(alias);
+      aliasIndex.push({ normalizedAlias, skill: skillObj.skill });
+    });
+  });
+  aliasIndex.sort((a, b) => b.normalizedAlias.length - a.normalizedAlias.length);
+
+  // Find first match
+  for (const { normalizedAlias, skill } of aliasIndex) {
+    if (normalizedInput.includes(normalizedAlias)) {
+      return skill;
+    }
+  }
+  return null;
+}
+
+// Handle search navigation
+function handleSearch(inputValue) {
+  setSearchNotFound(false); // Reset previous state
+  const skill = detectSkill(inputValue);
+  if (skill) {
+    navigate(`/workers-search?skill=${skill}`);
+  } else {
+    setSearchNotFound(true);
+  }
+}
+
 
   const popularSearches = [
     'Electrician near me',
@@ -363,19 +603,37 @@ const handleSearchClick = () => {
               >
                 {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
-              <div style={searchContainerStyle} onClick={handleSearchClick}>
+              <div style={searchContainerStyle}>
                 <Search size={18} color="#666" />
                 <input
-            type="text"
-            placeholder="Search services, workers..."
-            style={{
-              border: 'none',
-              background: 'none',
-              outline: 'none',
-              flex: 1,
-              fontSize: '14px',
-            }}
+                  type="text"
+                  placeholder="Search services, workers..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch(searchInput);
+                    }
+                  }}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    outline: 'none',
+                    flex: 1,
+                    fontSize: '14px',
+                  }}
                 />
+                <button
+                  onClick={() => handleSearch(searchInput)}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    color: '#007BFF',
+                  }}
+                >
+                  <Search size={18} />
+                </button>
               </div>
             </div>
 
@@ -402,15 +660,34 @@ const handleSearchClick = () => {
             </div>
           </div>
 
+          {searchNotFound && (
+            <div style={{
+              padding: '10px 20px',
+              backgroundColor: '#ffe6e6',
+              color: '#d32f2f',
+              borderRadius: '8px',
+              margin: '10px 30px',
+              textAlign: 'center',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              No matching skill found. Try a different search term or select from the services below.
+            </div>
+          )}
+
         <div style={styles.footerSection}>
           <div style={styles.sectionTitle}>Popular Searches</div>
           <div style={styles.chips}>
-            {popularSearches.map((search, idx) => (
-              <button key={idx} style={styles.chip}>
-                {search}
-              </button>
-            ))}
-          </div>
+          {popularSearches.map((search, idx) => (
+            <button
+              key={idx}
+              style={styles.chip}
+              onClick={() => handleSearch(search)}
+            >
+              {search}
+            </button>
+          ))}
+        </div>
 
           <div style={{...styles.sectionTitle, marginTop: '16px'}}>
             Top Rated Near You
