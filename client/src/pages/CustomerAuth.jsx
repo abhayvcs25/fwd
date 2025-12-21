@@ -96,6 +96,10 @@ export default function CustomerAuth() {
     }
 
     alert("Registration successful!");
+    localStorage.setItem('token', data.token);
+      localStorage.setItem("customerId", data.user._id);
+      localStorage.setItem("fullName", data.user.fullName);
+      localStorage.setItem("email", data.user.email);
     navigate("/customer-dashboard");
 
   } catch (error) {
@@ -112,7 +116,7 @@ export default function CustomerAuth() {
         {/* Card Header */}
         <div className="p-8" style={{ backgroundColor: "#007BFF" }}>
           <h1 className="text-3xl font-bold text-white text-center mb-2" style={{ fontFamily: "Poppins" }}>
-            SkillMatch
+            DailyJobs
           </h1>
           <p className="text-blue-100 text-center" style={{ fontFamily: "Roboto" }}>
             Customer Portal

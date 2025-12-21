@@ -428,7 +428,7 @@ export default function CustomerDashboard() {
                   <button className="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors border border-gray-300">
                     Documentation
                   </button>
-                  <button className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                  <button onClick={() => navigate("/about")} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                     Contact Support
                   </button>
                 </div>

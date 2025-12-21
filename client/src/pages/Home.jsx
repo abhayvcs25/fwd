@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link,useNavigate } from 'react-router-dom';
 
 export default function Home() {
+  const navigate = useNavigate();
   return (
     <div className="bg-white">
       {/* Header */}
@@ -26,7 +27,7 @@ export default function Home() {
               Contact
             </a>
           </nav>
-          <Link to="/auth-selection">
+          <Link to="/customer-auth">
            <button
               className="px-6 py-2 rounded-lg font-medium text-white transition hover:opacity-90"
               style={{ backgroundColor: "#007BFF" }}
@@ -166,14 +167,14 @@ export default function Home() {
             <p className="text-lg mb-6" style={{ fontFamily: "Roboto" }}>
               Post your job and connect with verified workers near you
             </p>
-            <Link href="/customer-auth">
-              <button
+            
+              <button onClick={() => navigate("/customer-auth")}
               className="self-start px-8 py-3 rounded-lg font-medium text-blue-600 transition hover:opacity-90"
               style={{ backgroundColor: "#FFC107" }}
             >
-              Find Workers
+             <Link href="/customer-auth"> Find Workers</Link>
             </button>
-            </Link>
+            
             
           </div>
 
@@ -188,14 +189,14 @@ export default function Home() {
             <p className="text-lg mb-6 text-gray-800" style={{ fontFamily: "Roboto" }}>
               Register now and start getting hired for jobs in your area
             </p>
-            <Link href="/worker-auth">
-              <button
+            
+              <button onClick={() => navigate("/worker-auth")}
               className="self-start px-8 py-3 rounded-lg font-medium text-yellow-600 transition hover:opacity-90"
               style={{ backgroundColor: "#007BFF", color: "white" }}
               >
-                Register Now
+                <Link href="/worker-auth">Register Now</Link>
               </button>
-            </Link>
+            
             
           </div>
         </div>

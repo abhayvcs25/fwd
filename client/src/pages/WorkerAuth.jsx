@@ -128,6 +128,10 @@ export default function WorkerAuth() {
     }
 
     alert("Worker registered successfully!");
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("workerId", data.worker.id);
+    localStorage.setItem("fullName", data.worker.fullName);
+    localStorage.setItem("email", data.worker.email);
     navigate("/worker-dashboard");
 
     setRegisterData({
@@ -158,7 +162,7 @@ export default function WorkerAuth() {
       <header className="bg-white border-b border-gray-100 py-6 px-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold" style={{ color: "#007BFF", fontFamily: "Poppins" }}>
-            Worker Portal – SkillMatch
+            DailyJobs
           </h1>
         </div>
       </header>
@@ -177,7 +181,7 @@ export default function WorkerAuth() {
             </div>
             <div className="mt-8">
               <h2 className="text-2xl font-bold mb-4" style={{ color: "#333", fontFamily: "Poppins" }}>
-                Join SkillMatch Today
+                Join DailyJobs Today
               </h2>
               <ul className="space-y-3" style={{ fontFamily: "Roboto" }}>
                 <li className="flex items-start gap-3">
