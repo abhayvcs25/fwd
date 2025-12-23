@@ -130,9 +130,6 @@ const fetchConversations = async (userId) => {
     console.error("Error fetching conversations:", error);
   }
 };
-
-
-
   // ------------------- GET MESSAGES -------------------
  const getMessages = async (conversationId, otherUser) => {
   try {
@@ -193,7 +190,6 @@ const fetchConversations = async (userId) => {
   }
 };
 
-
   // ------------------- OPEN CHAT -------------------
 const openChat = (chat) => {
   if (!chat || !chat.conversationId) {
@@ -216,9 +212,6 @@ const openChat = (chat) => {
     avatar: chat.avatar,
   });
 };
-
-
-
 
 const handleSendMessage = async () => {
   try {

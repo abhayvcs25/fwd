@@ -497,7 +497,6 @@ export default function Favorites() {
                           `/Messages?workerId=${worker._id}&workerName=${encodeURIComponent(worker?.fullName || '')}`
                         );
                       }}
-
                       onMouseEnter={(e) => {
                         Object.assign(e.currentTarget.style, {
                           ...contactButtonStyle,

@@ -452,6 +452,11 @@ export default function WorkersSearch() {
       style={contactButtonStyle}
       onMouseEnter={(e) => Object.assign(e.currentTarget.style, contactButtonHoverStyle)}
       onMouseLeave={(e) => Object.assign(e.currentTarget.style, contactButtonStyle)}
+      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(
+                          `/Messages?workerId=${worker._id}&workerName=${encodeURIComponent(worker?.fullName || '')}`
+                        );}}
     >
       Contact
     </button>
