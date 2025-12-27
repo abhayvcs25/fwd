@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router(); 
+const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Review = require('../models/Review');
 const Transaction = require('../models/Transaction');
@@ -270,6 +271,29 @@ router.get("/details/:id", async (req, res) => {
   } catch (err) {
     console.error("Get Worker Error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// =======================================================
+// GET RECENT BOOKINGS FOR A WORKER
+// =======================================================
+router.get('/:workerId/bookings', async (req, res) => {
+  try {
+    const { workerId } = req.params;
+
+    const bookings = await Booking.aggregate([
+      { $match: { workerId: new mongoose.Types.ObjectId(workerId) } },
+      { $lookup: { from: 'customers', localField: 'customerId', foreignField: '_id', as: 'customer' } },
+      { $unwind: '$customer' },
+      { $project: { customerName: '$customer.fullName', description: '$serviceName', date: '$scheduledAt', status: 1 } },
+      { $sort: { date: -1 } },
+      { $limit: 5 }
+    ]);
+
+    res.json(bookings);
+  } catch (err) {
+    console.error('Get Worker Bookings Error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

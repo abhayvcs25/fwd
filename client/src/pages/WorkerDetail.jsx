@@ -2,6 +2,7 @@
 import React, { useState, useEffect, } from 'react';
 import {Home, Heart, MessageSquare, User, HelpCircle, Menu, X, Search, Bell, LogOut, Star, Clock, DollarSign, Phone, Mail, MapPin } from 'lucide-react';
 import { Link, useNavigate ,useParams } from 'react-router-dom';
+import WorkerBookingsSection from './WorkerBookingsSection';
 
 export default function WorkerDetail() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -9,9 +10,6 @@ export default function WorkerDetail() {
 
   const [isFavorite, setIsFavorite] = useState(false);
 
-
-
-  
   const [showForm, setShowForm] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -212,7 +210,11 @@ console.log("Worker ID from params: !", id);
     fontWeight: 'bold',
     fontSize: '16px',
   };
-
+const leftColumnStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '20px'
+};
   const mainContentStyle = {
     flex: 1,
     display: 'flex',
@@ -505,12 +507,18 @@ console.log("Worker ID from params: !", id);
         <div style={contentAreaStyle}>
           <div style={profileContainerStyle}>
             {/* Left - Worker Image */}
-            <div
-              style={{
-                ...profileImageStyle,
-                backgroundImage: `url('${worker.profile?.image || 'https://via.placeholder.com/500'}')`,
-              }}
-            />
+            <div style={leftColumnStyle}>
+    {/* Worker Image */}
+    <div
+      style={{
+        ...profileImageStyle,
+        backgroundImage: `url('${worker.profile?.image || 'https://via.placeholder.com/500'}')`,
+      }}
+    />
+
+    {/* Booking section directly below image */}
+    <WorkerBookingsSection workerId={id} />
+  </div>
 
             {/* Right - Worker Details */}
             <div style={profileInfoStyle}>
@@ -775,6 +783,8 @@ console.log("Worker ID from params: !", id);
                 )}
             </div>
           </div>
+
+
 
           {/* About Section */}
           
