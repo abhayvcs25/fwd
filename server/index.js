@@ -7,13 +7,12 @@ const connectDB = require("./config/db.js");
 const userRoutes = require("./routes/userRoutes.js");
 const favoriteRoutes = require('./routes/favoriteRoutes.js');
 const bookingsRoutes = require('./routes/bookingsRoutes.js');
-const reviewRoutes = require('./routes/reviewRoutes.js');
 const messagesRoutes = require('./routes/messagesRoutes.js');
-const transactionRoutes = require('./routes/transactionRoutes.js');
 const requestsRoutes = require('./routes/requestsRoutes.js');
 const workerRoutes = require('./routes/workersRoutes.js');
 const dashboardRoutes = require('./routes/dashboardRoutes.js');
 const workerDashboardRoutes = require('./routes/workerDashboardRoutes.js');
+const reviewRoutes = require('./routes/reviewRoutes.js');
 
 
 
@@ -31,13 +30,12 @@ connectDB();
 app.use("/api/users", userRoutes);
 app.use('/favorite', favoriteRoutes);
 app.use('/api/bookings', bookingsRoutes);
-app.use('/api/reviews', reviewRoutes);
 app.use('/api/messages', messagesRoutes);
-app.use('/api/transactions', transactionRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/workers', workerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/worker-dashboard', workerDashboardRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 
 // Health Check

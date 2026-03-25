@@ -1,13 +1,44 @@
-const { Schema, model, Types } = require('mongoose');
+const { Schema, model, Types } = require("mongoose");
 
-const TransactionSchema = new Schema({
-  bookingId: { type: Types.ObjectId, ref: 'Booking', default: null },
-  customerId: { type: Types.ObjectId, ref: 'Customer', index: true },
-  workerId: { type: Types.ObjectId, ref: 'Worker', index: true },
-  amount: { type: Number, required: true },
-  currency: { type: String, default: 'USD' },
-  providerId: { type: String },
-  status: { type: String, enum: ['pending','paid','refunded'], default: 'pending' }
-}, { timestamps: true });
+const TransactionSchema = new Schema(
+  {
+    workerId: {
+      type: Types.ObjectId,
+      ref: "Customer",
+      required: true,
+      index: true,
+    },
+    customerId: {
+      type: Types.ObjectId,
+      ref: "Customer",
+      required: true,
+      index: true,
+    },
+    bookingId: {
+      type: Types.ObjectId,
+      ref: "Booking",
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
-module.exports = model('Transaction', TransactionSchema);
+// Indexes
+TransactionSchema.index({ workerId: 1, status: 1 });
+TransactionSchema.index({ bookingId: 1 });
+
+module.exports = model("Transaction", TransactionSchema);

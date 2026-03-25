@@ -1,25 +1,39 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
 const Review = require('../models/Review');
+const auth = require('../middleware/auth');
 
 // Create a review
 router.post('/', auth, async (req, res) => {
   try {
-    const { bookingId, workerId, rating, comment } = req.body;
-    const review = await Review.create({ bookingId, customerId: req.user._id, workerId, rating, comment });
-    res.status(201).json({ review });
-  } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
+    const { workerId, rating, comment } = req.body;
+    const customerId = req.user._id;
+
+    const review = new Review({
+      workerId,
+      customerId,
+      rating,
+      comment,
+    });
+
+    await review.save();
+    res.status(201).json({ message: 'Review created successfully', review });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-// Get reviews for worker
-router.get('/worker/:id', async (req, res) => {
+// Get reviews for a worker
+router.get('/:workerId', async (req, res) => {
   try {
-    const reviews = await Review.find({ workerId: req.params.id }).sort({ createdAt: -1 });
-    // compute average rating
-    const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) : 0;
-    res.json({ reviews, averageRating: avg });
-  } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
+    const { workerId } = req.params;
+    const reviews = await Review.find({ workerId }).populate('customerId', 'fullName');
+    res.json(reviews);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 module.exports = router;

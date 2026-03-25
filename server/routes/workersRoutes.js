@@ -2,12 +2,10 @@ const express = require('express');
 const router = express.Router(); 
 const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
-const Review = require('../models/Review');
-const Transaction = require('../models/Transaction');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || "secret123";
+const JWT_SECRET = process.env.JWT_SECRET || "secretkey";
 
 // ------------------------------------------------------
 // 1. REGISTER WORKER
